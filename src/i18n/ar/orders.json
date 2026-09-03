@@ -1,0 +1,20 @@
+{
+  "responses": {
+    "order_created": "تم إنشاء الطلب بنجاح.",
+    "list_retrieved": "تم استرجاع الطلبات بنجاح.",
+    "order_retrieved": "تم استرجاع الطلب بنجاح.",
+    "order_updated": "تم تحديث الطلب بنجاح.",
+    "order_deleted": "تم حذف الطلب بنجاح."
+  },
+  "errors": {
+    "not_found": "الطلب غير موجود.",
+    "cart_not_found": "سلة التسوق غير موجودة.",
+    "cart_already_checked_out": "تم إتمام هذه السلة مسبقًا.",
+    "product_not_found": "منتج واحد أو أكثر غير موجود.",
+    "product_inactive": "يوجد منتج واحد أو أكثر غير نشط ولا يمكن طلبه.",
+    "insufficient_stock": "مخزون منتج واحد أو أكثر غير كافٍ.",
+    "user_can_only_cancel": "يمكن للمستخدم فقط إلغاء طلباته المعلقة.",
+    "only_pending_can_be_updated": "يمكن للمستخدم تعديل الطلبات المعلقة فقط.",
+    "completed_order_cannot_be_deleted": "لا يمكن حذف الطلبات المكتملة."
+  }
+}

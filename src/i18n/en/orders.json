@@ -1,0 +1,20 @@
+{
+  "responses": {
+    "order_created": "Order created successfully.",
+    "list_retrieved": "Orders retrieved successfully.",
+    "order_retrieved": "Order retrieved successfully.",
+    "order_updated": "Order updated successfully.",
+    "order_deleted": "Order deleted successfully."
+  },
+  "errors": {
+    "not_found": "Order not found.",
+    "cart_not_found": "Cart not found.",
+    "cart_already_checked_out": "This cart has already been checked out.",
+    "product_not_found": "One or more products were not found.",
+    "product_inactive": "One or more products are inactive and cannot be ordered.",
+    "insufficient_stock": "One or more products do not have enough stock.",
+    "user_can_only_cancel": "Users can only cancel their own pending orders.",
+    "only_pending_can_be_updated": "Only pending orders can be updated by the user.",
+    "completed_order_cannot_be_deleted": "Completed orders cannot be deleted."
+  }
+}

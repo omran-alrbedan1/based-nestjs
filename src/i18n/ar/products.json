@@ -1,0 +1,15 @@
+{
+  "responses": {
+    "product_created": "تم إنشاء المنتج بنجاح.",
+    "list_retrieved": "تم استرجاع المنتجات بنجاح.",
+    "product_retrieved": "تم استرجاع المنتج بنجاح.",
+    "product_updated": "تم تحديث المنتج بنجاح.",
+    "product_stock_updated": "تم تحديث مخزون المنتج بنجاح.",
+    "product_deleted": "تم حذف المنتج بنجاح."
+  },
+  "errors": {
+    "not_found": "المنتج غير موجود.",
+    "sku_taken": "رمز تعريف المنتج مستخدم بالفعل.",
+    "category_not_found": "الفئة الخاصة بهذا المنتج غير موجودة."
+  }
+}

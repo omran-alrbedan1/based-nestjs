@@ -1,0 +1,10 @@
+{
+  "responses": {
+    "api_running": "API is running successfully."
+  },
+  "errors": {
+    "internal_server_error": "An unexpected error occurred. Please try again later.",
+    "registration_failed": "Failed to register user.",
+    "jwt_refresh_secret_missing": "Authentication is temporarily unavailable."
+  }
+}

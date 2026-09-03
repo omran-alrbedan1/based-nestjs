@@ -1,0 +1,17 @@
+{
+  "invalid_input": "Validation failed.",
+  "invalid_email": "{property} must be a valid email address.",
+  "not_empty": "{property} cannot be empty.",
+  "is_string": "{property} must be a string.",
+  "is_int": "{property} must be an integer number.",
+  "min": "{property} must be at least {constraints.0}.",
+  "max": "{property} must not be greater than {constraints.0}.",
+  "min_length": "{property} must be at least {constraints.0} characters long.",
+  "strong_password": "{property} must contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+  "is_boolean": "{property} must be a boolean value.",
+  "is_array": "{property} must be an array.",
+  "array_min_size": "{property} must contain at least {constraints.0} item(s).",
+  "invalid_price": "{property} must be a valid price with up to 2 decimal places.",
+  "max_length": "{property} must be at most {constraints.0} characters long.",
+  "whitelist": "{property} is not allowed."
+}

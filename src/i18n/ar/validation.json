@@ -1,0 +1,17 @@
+{
+  "invalid_input": "فشل التحقق من صحة البيانات.",
+  "invalid_email": "يجب أن يكون {property} بريدًا إلكترونيًا صالحًا.",
+  "not_empty": "لا يمكن أن يكون {property} فارغًا.",
+  "is_string": "يجب أن يكون {property} نصًا.",
+  "is_int": "يجب أن تكون قيمة {property} عددًا صحيحًا.",
+  "min": "يجب ألا تقل قيمة {property} عن {constraints.0}.",
+  "max": "يجب ألا تزيد قيمة {property} عن {constraints.0}.",
+  "min_length": "يجب أن يحتوي {property} على {constraints.0} أحرف على الأقل.",
+  "strong_password": "يجب أن يحتوي {property} على حرف كبير وحرف صغير ورقم ورمز خاص واحد على الأقل.",
+  "is_boolean": "يجب أن تكون قيمة {property} منطقية.",
+  "is_array": "يجب أن تكون قيمة {property} مصفوفة.",
+  "array_min_size": "يجب أن يحتوي {property} على عنصر واحد على الأقل بعدد {constraints.0} أو أكثر.",
+  "invalid_price": "يجب أن تكون قيمة {property} سعرًا صالحًا وبحد أقصى منزلتين عشريتين.",
+  "max_length": "يجب ألا يزيد {property} عن {constraints.0} حرفًا.",
+  "whitelist": "الحقل {property} غير مسموح به."
+}

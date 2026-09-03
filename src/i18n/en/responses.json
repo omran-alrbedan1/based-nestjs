@@ -1,0 +1,49 @@
+{
+  "common": {
+    "responses": {
+      "success": "Success."
+    }
+  },
+  "system": {
+    "responses": {
+      "api_running": "API is running successfully."
+    }
+  },
+  "auth": {
+    "responses": {
+      "user_registered": "User registered successfully.",
+      "tokens_refreshed": "Tokens refreshed successfully.",
+      "user_logged_out": "User logged out successfully.",
+      "user_logged_in": "User logged in successfully."
+    }
+  },
+  "users": {
+    "responses": {
+      "profile_retrieved": "User profile retrieved successfully.",
+      "list_retrieved": "Users retrieved successfully.",
+      "user_retrieved": "User retrieved successfully.",
+      "user_updated": "User updated successfully.",
+      "password_updated": "Password updated successfully.",
+      "account_deleted": "User account deleted successfully."
+    }
+  },
+  "category": {
+    "responses": {
+      "category_created": "Category created successfully.",
+      "list_retrieved": "Categories retrieved successfully.",
+      "category_retrieved": "Category retrieved successfully.",
+      "category_updated": "Category updated successfully.",
+      "category_deleted": "Category deleted successfully."
+    }
+  },
+  "products": {
+    "responses": {
+      "product_created": "Product created successfully.",
+      "list_retrieved": "Products retrieved successfully.",
+      "product_retrieved": "Product retrieved successfully.",
+      "product_updated": "Product updated successfully.",
+      "product_stock_updated": "Product stock updated successfully.",
+      "product_deleted": "Product deleted successfully."
+    }
+  }
+}

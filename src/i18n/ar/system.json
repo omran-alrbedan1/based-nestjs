@@ -1,0 +1,10 @@
+{
+  "responses": {
+    "api_running": "واجهة البرمجة تعمل بنجاح."
+  },
+  "errors": {
+    "internal_server_error": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا.",
+    "registration_failed": "فشل تسجيل المستخدم.",
+    "jwt_refresh_secret_missing": "المصادقة غير متاحة مؤقتًا."
+  }
+}

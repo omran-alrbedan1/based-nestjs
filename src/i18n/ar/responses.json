@@ -1,0 +1,49 @@
+{
+  "common": {
+    "responses": {
+      "success": "تمت العملية بنجاح."
+    }
+  },
+  "system": {
+    "responses": {
+      "api_running": "واجهة البرمجة تعمل بنجاح."
+    }
+  },
+  "auth": {
+    "responses": {
+      "user_registered": "تم تسجيل المستخدم بنجاح.",
+      "tokens_refreshed": "تم تحديث الرموز بنجاح.",
+      "user_logged_out": "تم تسجيل خروج المستخدم بنجاح.",
+      "user_logged_in": "تم تسجيل دخول المستخدم بنجاح."
+    }
+  },
+  "users": {
+    "responses": {
+      "profile_retrieved": "تم استرجاع ملف المستخدم بنجاح.",
+      "list_retrieved": "تم استرجاع المستخدمين بنجاح.",
+      "user_retrieved": "تم استرجاع المستخدم بنجاح.",
+      "user_updated": "تم تحديث المستخدم بنجاح.",
+      "password_updated": "تم تحديث كلمة المرور بنجاح.",
+      "account_deleted": "تم حذف حساب المستخدم بنجاح."
+    }
+  },
+  "category": {
+    "responses": {
+      "category_created": "تم إنشاء الفئة بنجاح.",
+      "list_retrieved": "تم استرجاع الفئات بنجاح.",
+      "category_retrieved": "تم استرجاع الفئة بنجاح.",
+      "category_updated": "تم تحديث الفئة بنجاح.",
+      "category_deleted": "تم حذف الفئة بنجاح."
+    }
+  },
+  "products": {
+    "responses": {
+      "product_created": "تم إنشاء المنتج بنجاح.",
+      "list_retrieved": "تم استرجاع المنتجات بنجاح.",
+      "product_retrieved": "تم استرجاع المنتج بنجاح.",
+      "product_updated": "تم تحديث المنتج بنجاح.",
+      "product_stock_updated": "تم تحديث مخزون المنتج بنجاح.",
+      "product_deleted": "تم حذف المنتج بنجاح."
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "responses": {
+    "profile_retrieved": "User profile retrieved successfully.",
+    "list_retrieved": "Users retrieved successfully.",
+    "user_retrieved": "User retrieved successfully.",
+    "user_updated": "User updated successfully.",
+    "password_updated": "Password updated successfully.",
+    "account_deleted": "User account deleted successfully."
+  },
+  "errors": {
+    "not_found": "User not found.",
+    "email_taken": "Email is already taken.",
+    "same_password": "New password cannot be the same as the current password."
+  }
+}
