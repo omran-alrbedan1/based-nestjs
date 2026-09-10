@@ -8,17 +8,26 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './modules/users/users.module';
 import { TransformInterceptor } from './utils/transform.interceptor';
-import { CategoryModule } from './modules/category/category.module';
-import { ProductsModule } from './modules/products/products.module';
 import { AcceptLanguageResolver, I18nJsonLoader, I18nModule } from 'nestjs-i18n';
 import * as path from 'path';
 import { ApiExceptionFilter } from './common/filters/api-exception.filter';
-import { OrdersModule } from './modules/orders/orders.module';
+import { environmentValidationSchema } from './config/environment.validation';
+import { CustomersModule } from './modules/customers/customers.module';
+import { VehiclesModule } from './modules/vehicles/vehicles.module';
+import { MaintenanceCardsModule } from './modules/maintenance-cards/maintenance-cards.module';
+import { MaintenanceCardOptionsModule } from './modules/maintenance-card-options/maintenance-card-options.module';
+import { SearchModule } from './modules/search/search.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      cache: true,
+      validationSchema: environmentValidationSchema,
+      validationOptions: {
+        abortEarly: false,
+      },
     }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
@@ -38,9 +47,12 @@ import { OrdersModule } from './modules/orders/orders.module';
       },
     ]),
     UsersModule,
-    CategoryModule,
-    ProductsModule,
-    OrdersModule,
+    CustomersModule,
+    VehiclesModule,
+    MaintenanceCardsModule,
+    MaintenanceCardOptionsModule,
+    SearchModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

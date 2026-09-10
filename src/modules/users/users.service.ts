@@ -7,10 +7,7 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import * as bcrypt from 'bcrypt';
 import { AppException } from 'src/common/exceptions/app.exception';
 import { BaseListQueryDto } from 'src/common/dto/base-list-query.dto';
-import {
-  createPaginatedResponse,
-  normalizeListQuery,
-} from 'src/common/utils/pagination.util';
+import { createPaginatedResponse, normalizeListQuery } from 'src/common/utils/pagination.util';
 import { buildUserWhereInput } from './users.query-builder';
 
 @Injectable()
@@ -25,6 +22,7 @@ export class UsersService {
     lastName: true,
     email: true,
     role: true,
+    isActive: true,
     password: false,
     createdAt: true,
     updatedAt: true,
@@ -43,9 +41,7 @@ export class UsersService {
     return user;
   }
 
-  async findAll(
-    listQueryDto: BaseListQueryDto,
-  ): Promise<PaginatedUsersResponseDto> {
+  async findAll(listQueryDto: BaseListQueryDto): Promise<PaginatedUsersResponseDto> {
     const { page, limit, skip, search } = normalizeListQuery(listQueryDto);
     const where = buildUserWhereInput(search);
 
@@ -63,10 +59,7 @@ export class UsersService {
     return createPaginatedResponse(items, page, limit, total);
   }
 
-  async update(
-    userId: string,
-    updateUserDto: UpdateUserDto,
-  ): Promise<UserResponseDto> {
+  async update(userId: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -111,10 +104,7 @@ export class UsersService {
       throw new AppException(404, 'users.errors.not_found');
     }
 
-    const isCurrentPasswordValid = await bcrypt.compare(
-      currentPassword,
-      user.password,
-    );
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
     if (!isCurrentPasswordValid) {
       throw new AppException(401, 'auth.errors.current_password_incorrect');
@@ -151,8 +141,12 @@ export class UsersService {
       throw new AppException(404, 'users.errors.not_found');
     }
 
-    await this.prisma.user.delete({
+    await this.prisma.user.update({
       where: { id: userId },
+      data: {
+        isActive: false,
+        refreshToken: null,
+      },
     });
 
     return null;

@@ -1,7 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from '../../generated/prisma/client';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
@@ -41,7 +41,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       await this.$connect();
       this.logger.log('Database connected successfully');
       this.reconnectAttempts = 0;
-    } catch (error) {
+    } catch {
       this.reconnectAttempts++;
       this.logger.error(
         `Connection failed (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
@@ -66,23 +66,5 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     } catch {
       return false;
     }
-  }
-
-  async cleanDatabase() {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('Cannot clean database in production environment');
-    }
-
-    const models = Reflect.ownKeys(this).filter(
-      (key) => typeof key === 'string' && key[0] === key[0]?.toLowerCase(),
-    );
-
-    return Promise.all(
-      models.map((model) => {
-        if (typeof model === 'string' && !model.startsWith('_')) {
-          return this[model].deleteMany();
-        }
-      }),
-    );
   }
 }

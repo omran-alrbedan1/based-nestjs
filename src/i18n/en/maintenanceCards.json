@@ -1,0 +1,35 @@
+{
+  "responses": {
+    "created": "Maintenance card created successfully.",
+    "list_retrieved": "Maintenance cards retrieved successfully.",
+    "retrieved": "Maintenance card retrieved successfully.",
+    "updated": "Maintenance card updated successfully.",
+    "closed": "Maintenance card closed successfully.",
+    "reopened": "Maintenance card reopened successfully.",
+    "work_created": "Required work created successfully.",
+    "work_updated": "Required work updated successfully.",
+    "work_deleted": "Required work deleted successfully."
+  },
+  "errors": {
+    "not_found": "Maintenance card not found.",
+    "duplicate_number": "A maintenance card with this number already exists.",
+    "ownership_not_found": "Vehicle ownership record not found.",
+    "ownership_customer_mismatch": "The selected ownership does not belong to the customer.",
+    "inactive_or_invalid_option": "A selected option does not exist or is inactive.",
+    "duplicate_work_order": "Required work display order values must be unique.",
+    "blank_work": "Required work descriptions cannot be blank.",
+    "invalid_delivery_date": "Expected delivery cannot be before the received date.",
+    "invalid_date_range": "The date range is invalid.",
+    "incomplete_approval": "Approval name and approval timestamp are required.",
+    "approval_metadata_without_approval": "Approval metadata cannot be changed while the card is not approved.",
+    "closed_read_only": "A closed maintenance card is read-only until reopened.",
+    "invalid_close": "Only an open maintenance card can be closed.",
+    "invalid_reopen": "Only a closed maintenance card can be reopened.",
+    "reopen_forbidden": "Only a super administrator can reopen a maintenance card.",
+    "required_work_incomplete": "All required work must be completed or cancelled before closing the card.",
+    "work_not_found": "Required work item not found.",
+    "ownership_not_current": "The selected vehicle ownership is no longer current.",
+    "inactive_customer": "The selected customer is inactive.",
+    "inactive_vehicle": "The selected vehicle is inactive."
+  }
+}

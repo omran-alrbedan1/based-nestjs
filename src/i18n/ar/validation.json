@@ -13,5 +13,10 @@
   "array_min_size": "يجب أن يحتوي {property} على عنصر واحد على الأقل بعدد {constraints.0} أو أكثر.",
   "invalid_price": "يجب أن تكون قيمة {property} سعرًا صالحًا وبحد أقصى منزلتين عشريتين.",
   "max_length": "يجب ألا يزيد {property} عن {constraints.0} حرفًا.",
-  "whitelist": "الحقل {property} غير مسموح به."
+  "whitelist": "الحقل {property} غير مسموح به.",
+  "is_uuid": "يجب أن تكون قيمة {property} معرّف UUID صالحًا.",
+  "length": "يجب أن يتكون {property} من {constraints.0} حرفًا بالضبط.",
+  "is_enum": "تحتوي قيمة {property} على خيار غير مدعوم.",
+  "is_date_string": "يجب أن تكون قيمة {property} تاريخًا ووقتًا صالحين بصيغة ISO.",
+  "array_unique": "يجب ألا يحتوي {property} على قيم مكررة."
 }

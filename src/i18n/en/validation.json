@@ -13,5 +13,10 @@
   "array_min_size": "{property} must contain at least {constraints.0} item(s).",
   "invalid_price": "{property} must be a valid price with up to 2 decimal places.",
   "max_length": "{property} must be at most {constraints.0} characters long.",
-  "whitelist": "{property} is not allowed."
+  "whitelist": "{property} is not allowed.",
+  "is_uuid": "{property} must be a valid UUID.",
+  "length": "{property} must be exactly {constraints.0} characters long.",
+  "is_enum": "{property} contains an unsupported value.",
+  "is_date_string": "{property} must be a valid ISO date-time.",
+  "array_unique": "{property} must not contain duplicate values."
 }

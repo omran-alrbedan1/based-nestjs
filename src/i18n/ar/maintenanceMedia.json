@@ -1,0 +1,19 @@
+{
+  "errors": {
+    "invalid_file_type": "يُسمح فقط بصور JPEG وPNG وWebP الصالحة.",
+    "invalid_storage_key": "مرجع الملف المخزن غير صالح.",
+    "file_missing": "تعذر العثور على الملف المخزن.",
+    "photo_required": "مطلوب إرفاق صورة واحدة على الأقل.",
+    "photo_not_found": "لم يتم العثور على صورة بطاقة الصيانة.",
+    "signature_required": "صورة التوقيع مطلوبة.",
+    "signature_not_found": "لم يتم العثور على توقيع بطاقة الصيانة."
+  },
+  "responses": {
+    "photos_uploaded": "تم رفع صور بطاقة الصيانة بنجاح.",
+    "photos_retrieved": "تم استرجاع صور بطاقة الصيانة بنجاح.",
+    "photo_deleted": "تم حذف صورة بطاقة الصيانة بنجاح.",
+    "signature_uploaded": "تم رفع توقيع بطاقة الصيانة بنجاح.",
+    "signature_retrieved": "تم استرجاع توقيع بطاقة الصيانة بنجاح.",
+    "signature_deleted": "تم حذف توقيع بطاقة الصيانة بنجاح."
+  }
+}

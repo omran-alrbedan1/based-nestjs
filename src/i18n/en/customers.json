@@ -1,0 +1,15 @@
+{
+  "responses": {
+    "maintenance_history_retrieved": "Customer maintenance history retrieved successfully.",
+    "created": "Customer created successfully.",
+    "list_retrieved": "Customers retrieved successfully.",
+    "retrieved": "Customer retrieved successfully.",
+    "updated": "Customer updated successfully.",
+    "deactivated": "Customer deactivated successfully.",
+    "activated": "Customer activated successfully."
+  },
+  "errors": {
+    "not_found": "Customer not found.",
+    "inactive": "The customer is inactive."
+  }
+}

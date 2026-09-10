@@ -1,0 +1,18 @@
+{
+  "responses": {
+    "list_retrieved": "Maintenance card options retrieved successfully.",
+    "created": "Option created successfully.",
+    "updated": "Option updated successfully.",
+    "activated": "Option activated successfully.",
+    "deactivated": "Option deactivated successfully.",
+    "deleted": "Option deleted successfully."
+  },
+  "errors": {
+    "not_found": "Option not found.",
+    "kind_not_found": "Option type not found.",
+    "manage_forbidden": "Only a super administrator can manage options.",
+    "duplicate_code": "An option with this code already exists.",
+    "used_immutable": "The code and label of a used option cannot be changed.",
+    "used_delete": "A used option cannot be deleted."
+  }
+}

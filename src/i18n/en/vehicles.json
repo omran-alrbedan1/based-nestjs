@@ -1,0 +1,17 @@
+{
+  "responses": {
+    "maintenance_history_retrieved": "Vehicle maintenance history retrieved successfully.",
+    "created": "Vehicle created successfully.",
+    "list_retrieved": "Vehicles retrieved successfully.",
+    "retrieved": "Vehicle retrieved successfully.",
+    "updated": "Vehicle updated successfully.",
+    "deactivated": "Vehicle deactivated successfully.",
+    "activated": "Vehicle activated successfully."
+  },
+  "errors": {
+    "not_found": "Vehicle not found.",
+    "inactive": "The vehicle is inactive.",
+    "duplicate_vin": "A vehicle with this VIN already exists.",
+    "duplicate_active_plate": "An active vehicle with this plate number already exists."
+  }
+}

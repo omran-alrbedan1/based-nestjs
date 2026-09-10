@@ -5,6 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { AppException } from 'src/common/exceptions/app.exception';
+import { getJwtConfiguration } from 'src/config/jwt.config';
+import type { Request } from 'express';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
@@ -12,15 +14,16 @@ export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refres
     private configService: ConfigService,
     private prisma: PrismaService,
   ) {
+    const jwtConfig = getJwtConfiguration(configService);
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_REFRESH_SECRET') || 'your-refresh-secret-key',
+      secretOrKey: jwtConfig.refreshSecret,
       passReqToCallback: true,
     });
   }
 
-  async validate(req: any, payload: { sub: string; refreshId: string }) {
+  async validate(req: Request, payload: { sub: string; refreshId: string }) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {

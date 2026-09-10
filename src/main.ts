@@ -2,11 +2,21 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import 'dotenv/config';
 import { I18nValidationPipe } from 'nestjs-i18n';
+import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
   app.setGlobalPrefix('api/v1');
+  app.use(
+    helmet({
+      // Swagger UI requires inline styles/scripts. Other Helmet API defaults remain enabled.
+      contentSecurityPolicy: false,
+    }),
+  );
 
   // sett global validation :
   app.useGlobalPipes(
@@ -22,15 +32,29 @@ async function bootstrap() {
 
   // enable cors :
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') ?? 'http://localhost:3000',
-    creddentials: true,
+    origin: configService
+      .getOrThrow<string>('ALLOWED_ORIGINS')
+      .split(',')
+      .map((origin) => origin.trim()),
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     maxAge: 86400,
     allowedHeaders: ['Content-type', 'Authorization', 'Accept', 'Accept-Language'],
     exposedHeaders: ['X-Total-Count', 'X-Pagination'],
   });
 
-  const port = process.env.PORT ?? 3000;
+  if (configService.get<boolean>('SWAGGER_ENABLED')) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Red Power Garage API')
+      .setDescription('Backend API for Red Power Garage.')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document);
+  }
+
+  const port = configService.getOrThrow<number>('PORT');
   try {
     await app.listen(port);
   } catch (err) {
@@ -38,4 +62,4 @@ async function bootstrap() {
     process.exit(1);
   }
 }
-bootstrap();
+void bootstrap();

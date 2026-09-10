@@ -13,8 +13,14 @@ import { Observable, map } from 'rxjs';
 export const RESPONSE_MESSAGE_KEY = 'response_message';
 export const ResponseMessage = (message: string) => SetMetadata(RESPONSE_MESSAGE_KEY, message);
 
+interface ApiSuccessResponse<T> {
+  statusCode: number;
+  message: string;
+  data: T;
+}
+
 @Injectable()
-export class TransformInterceptor<T> implements NestInterceptor {
+export class TransformInterceptor<T> implements NestInterceptor<T, ApiSuccessResponse<T>> {
   constructor(
     private readonly reflector: Reflector,
     private readonly i18n: I18nService,
@@ -46,7 +52,7 @@ export class TransformInterceptor<T> implements NestInterceptor {
     return capitalized.endsWith('.') ? capitalized : `${capitalized}.`;
   }
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler<T>): Observable<ApiSuccessResponse<T>> {
     const statusCode = context.switchToHttp().getResponse<Response>().statusCode;
 
     const raw =

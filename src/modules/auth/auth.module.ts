@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
+import { getJwtConfiguration } from 'src/config/jwt.config';
 
 @Module({
   imports: [
@@ -13,10 +14,14 @@ import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
     ConfigModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') ?? 'defaultsecret2025',
-        signOptions: { expiresIn: Number(configService.get<number>('JWT_EXPIRES_IN') ?? 900) },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const jwtConfig = getJwtConfiguration(configService);
+
+        return {
+          secret: jwtConfig.accessSecret,
+          signOptions: { expiresIn: jwtConfig.accessExpiresIn },
+        };
+      },
     }),
   ],
   providers: [AuthService, JwtStrategy, RefreshTokenStrategy],

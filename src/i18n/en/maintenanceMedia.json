@@ -1,0 +1,19 @@
+{
+  "errors": {
+    "invalid_file_type": "Only valid JPEG, PNG, and WebP images are allowed.",
+    "invalid_storage_key": "The stored file reference is invalid.",
+    "file_missing": "The stored file could not be found.",
+    "photo_required": "At least one photo is required.",
+    "photo_not_found": "The maintenance-card photo was not found.",
+    "signature_required": "A signature image is required.",
+    "signature_not_found": "The maintenance-card signature was not found."
+  },
+  "responses": {
+    "photos_uploaded": "Maintenance-card photos uploaded successfully.",
+    "photos_retrieved": "Maintenance-card photos retrieved successfully.",
+    "photo_deleted": "Maintenance-card photo deleted successfully.",
+    "signature_uploaded": "Maintenance-card signature uploaded successfully.",
+    "signature_retrieved": "Maintenance-card signature retrieved successfully.",
+    "signature_deleted": "Maintenance-card signature deleted successfully."
+  }
+}

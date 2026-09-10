@@ -1,4 +1,4 @@
-import { Role } from 'generated/prisma';
+import { Role } from 'generated/prisma/client';
 
 export class UserResponseDto {
   id!: string;
@@ -10,6 +10,8 @@ export class UserResponseDto {
   lastName!: string | null;
 
   role!: Role;
+
+  isActive!: boolean;
 
   createdAt!: Date;
 

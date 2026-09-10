@@ -1,0 +1,12 @@
+{
+  "responses": {
+    "retrieved": "Vehicle ownership history retrieved successfully.",
+    "transferred": "Vehicle ownership transferred successfully."
+  },
+  "errors": {
+    "current_not_found": "The vehicle has no current ownership record.",
+    "same_customer": "The selected customer already owns this vehicle.",
+    "concurrent_transfer": "The ownership changed during this request. Please retry.",
+    "invalid_transfer": "The ownership transfer could not be completed."
+  }
+}

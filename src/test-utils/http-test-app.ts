@@ -23,9 +23,7 @@ export const httpTestI18nImports = [
   }),
 ];
 
-export async function configureHttpTestApp(
-  app: INestApplication,
-): Promise<INestApplication> {
+export async function configureHttpTestApp(app: INestApplication): Promise<INestApplication> {
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new I18nValidationPipe({
@@ -37,12 +35,8 @@ export async function configureHttpTestApp(
       },
     }),
   );
-  app.useGlobalInterceptors(
-    new TransformInterceptor(app.get(Reflector), app.get(I18nService)),
-  );
-  app.useGlobalFilters(
-    new ApiExceptionFilter(app.get(HttpAdapterHost), app.get(I18nService)),
-  );
+  app.useGlobalInterceptors(new TransformInterceptor(app.get(Reflector), app.get(I18nService)));
+  app.useGlobalFilters(new ApiExceptionFilter(app.get(HttpAdapterHost), app.get(I18nService)));
   await app.init();
 
   return app;

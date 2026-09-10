@@ -41,14 +41,14 @@ export class ApiExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const { httpAdapter } = this.httpAdapterHost;
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
+    const response: unknown = ctx.getResponse<unknown>();
     const request = ctx.getRequest<Request>();
     const i18nContext = I18nContext.current(host) ?? I18nContext.current();
     const lang = i18nContext?.lang ?? 'en';
 
     const normalized = this.normalizeException(exception, lang);
 
-    if (normalized.statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (normalized.statusCode >= Number(HttpStatus.INTERNAL_SERVER_ERROR)) {
       this.logger.error(
         `Unhandled exception for ${request?.method ?? 'UNKNOWN'} ${request?.url ?? ''}`,
         exception instanceof Error ? exception.stack : String(exception),
