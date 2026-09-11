@@ -102,7 +102,7 @@ export class VehiclesService {
     return createPaginatedResponse(mapped, page, limit, total);
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id },
       select: {
@@ -123,7 +123,7 @@ export class VehiclesService {
     return { ...vehicle, currentOwnership };
   }
 
-  async maintenanceHistory(id: string, query: MaintenanceHistoryQueryDto) {
+  async maintenanceHistory(id: number, query: MaintenanceHistoryQueryDto) {
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id },
       select: {
@@ -173,7 +173,7 @@ export class VehiclesService {
     };
   }
 
-  async update(id: string, dto: UpdateVehicleDto) {
+  async update(id: number, dto: UpdateVehicleDto) {
     const normalized = this.normalizeVehicle(dto);
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id },
@@ -196,15 +196,15 @@ export class VehiclesService {
     }
   }
 
-  deactivate(id: string) {
+  deactivate(id: number) {
     return this.setActive(id, false);
   }
 
-  activate(id: string) {
+  activate(id: number) {
     return this.setActive(id, true);
   }
 
-  async getOwnership(id: string) {
+  async getOwnership(id: number) {
     await this.assertVehicleExists(id);
     const history = await this.prisma.vehicleOwnership.findMany({
       where: { vehicleId: id },
@@ -226,7 +226,7 @@ export class VehiclesService {
     };
   }
 
-  async transferOwnership(vehicleId: string, dto: TransferOwnershipDto) {
+  async transferOwnership(vehicleId: number, dto: TransferOwnershipDto) {
     const transferAt = new Date();
     try {
       return await this.prisma.$transaction(async (tx) => {
@@ -279,7 +279,7 @@ export class VehiclesService {
     }
   }
 
-  private async setActive(id: string, isActive: boolean) {
+  private async setActive(id: number, isActive: boolean) {
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id },
       select: { id: true, plateNumber: true },
@@ -293,7 +293,7 @@ export class VehiclesService {
     });
   }
 
-  private async assertVehicleExists(id: string): Promise<void> {
+  private async assertVehicleExists(id: number): Promise<void> {
     const vehicle = await this.prisma.vehicle.findUnique({ where: { id }, select: { id: true } });
     if (!vehicle) throw new AppException(404, 'vehicles.errors.not_found');
   }
@@ -301,7 +301,7 @@ export class VehiclesService {
   private async assertUniqueVehicleIdentity(
     plateNumber: string,
     vin?: string,
-    excludeId?: string,
+    excludeId?: number,
     checkActivePlate = true,
   ): Promise<void> {
     if (checkActivePlate) {

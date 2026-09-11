@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
+  ParseIntPipe,
   Post,
   Res,
   UploadedFile,
@@ -56,25 +56,25 @@ export class MaintenanceCardMediaController {
   })
   @ResponseMessage('maintenanceMedia.responses.photos_uploaded')
   uploadPhotos(
-    @Param('cardId', ParseUUIDPipe) cardId: string,
+    @Param('cardId', ParseIntPipe) cardId: number,
     @UploadedFiles() files: Express.Multer.File[] = [],
     @Body() dto: UploadMaintenanceCardPhotosDto,
-    @GetUser('id') userId: string,
+    @GetUser('id') userId: number,
   ) {
     return this.service.uploadPhotos(cardId, files, dto.displayOrder, userId);
   }
 
   @Get(':cardId/photos')
   @ResponseMessage('maintenanceMedia.responses.photos_retrieved')
-  listPhotos(@Param('cardId', ParseUUIDPipe) cardId: string) {
+  listPhotos(@Param('cardId', ParseIntPipe) cardId: number) {
     return this.service.listPhotos(cardId);
   }
 
   @Get(':cardId/photos/:photoId/content')
   @ApiOperation({ summary: 'Stream private maintenance-card photo content' })
   async photoContent(
-    @Param('cardId', ParseUUIDPipe) cardId: string,
-    @Param('photoId', ParseUUIDPipe) photoId: string,
+    @Param('cardId', ParseIntPipe) cardId: number,
+    @Param('photoId', ParseIntPipe) photoId: number,
     @Res() response: Response,
   ): Promise<void> {
     const file = await this.service.photoContent(cardId, photoId);
@@ -84,8 +84,8 @@ export class MaintenanceCardMediaController {
   @Delete(':cardId/photos/:photoId')
   @ResponseMessage('maintenanceMedia.responses.photo_deleted')
   async deletePhoto(
-    @Param('cardId', ParseUUIDPipe) cardId: string,
-    @Param('photoId', ParseUUIDPipe) photoId: string,
+    @Param('cardId', ParseIntPipe) cardId: number,
+    @Param('photoId', ParseIntPipe) photoId: number,
   ) {
     await this.service.deletePhoto(cardId, photoId);
     return null;
@@ -108,7 +108,7 @@ export class MaintenanceCardMediaController {
   })
   @ResponseMessage('maintenanceMedia.responses.signature_uploaded')
   uploadSignature(
-    @Param('cardId', ParseUUIDPipe) cardId: string,
+    @Param('cardId', ParseIntPipe) cardId: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.service.uploadSignature(cardId, file);
@@ -116,7 +116,7 @@ export class MaintenanceCardMediaController {
 
   @Get(':cardId/signature')
   @ResponseMessage('maintenanceMedia.responses.signature_retrieved')
-  getSignature(@Param('cardId', ParseUUIDPipe) cardId: string) {
+  getSignature(@Param('cardId', ParseIntPipe) cardId: number) {
     return this.service.getSignature(cardId);
   }
 
@@ -125,7 +125,7 @@ export class MaintenanceCardMediaController {
     summary: 'Stream private maintenance-card signature content',
   })
   async signatureContent(
-    @Param('cardId', ParseUUIDPipe) cardId: string,
+    @Param('cardId', ParseIntPipe) cardId: number,
     @Res() response: Response,
   ): Promise<void> {
     const file = await this.service.signatureContent(cardId);
@@ -134,7 +134,7 @@ export class MaintenanceCardMediaController {
 
   @Delete(':cardId/signature')
   @ResponseMessage('maintenanceMedia.responses.signature_deleted')
-  async deleteSignature(@Param('cardId', ParseUUIDPipe) cardId: string) {
+  async deleteSignature(@Param('cardId', ParseIntPipe) cardId: number) {
     await this.service.deleteSignature(cardId);
     return null;
   }

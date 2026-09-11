@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, TransformFnParams } from 'class-transformer';
-import { IsBoolean, IsOptional, IsUUID } from 'class-validator';
+import { Transform, TransformFnParams, Type } from 'class-transformer';
+import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
 import { i18nValidationMessage } from 'nestjs-i18n';
 import { BaseListQueryDto } from 'src/common/dto/base-list-query.dto';
 
@@ -17,8 +17,10 @@ export class VehicleListQueryDto extends BaseListQueryDto {
   @IsBoolean({ message: i18nValidationMessage('validation.is_boolean') })
   isActive?: boolean;
 
-  @ApiPropertyOptional({ format: 'uuid' })
+  @ApiPropertyOptional({ example: 1 })
+  @Type(() => Number)
   @IsOptional()
-  @IsUUID('4', { message: i18nValidationMessage('validation.is_uuid') })
-  customerId?: string;
+  @IsInt({ message: i18nValidationMessage('validation.is_int') })
+  @Min(1, { message: i18nValidationMessage('validation.min') })
+  customerId?: number;
 }

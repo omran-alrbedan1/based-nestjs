@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -44,7 +44,7 @@ export class MaintenanceCardsController {
   @ApiOperation({ summary: 'Create an open maintenance card and initial status event' })
   @ApiCreatedResponse({ description: 'Maintenance card created.' })
   @ResponseMessage('maintenanceCards.responses.created')
-  create(@Body() dto: CreateMaintenanceCardDto, @GetUser('id') userId: string) {
+  create(@Body() dto: CreateMaintenanceCardDto, @GetUser('id') userId: number) {
     return this.service.create(dto, userId);
   }
 
@@ -58,13 +58,13 @@ export class MaintenanceCardsController {
 
   @Get(':id')
   @ResponseMessage('maintenanceCards.responses.retrieved')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOne(id);
   }
 
   @Patch(':id')
   @ResponseMessage('maintenanceCards.responses.updated')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateMaintenanceCardDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMaintenanceCardDto) {
     return this.service.update(id, dto);
   }
 
@@ -72,7 +72,7 @@ export class MaintenanceCardsController {
   @ApiOperation({ summary: 'Add a work item to an open maintenance card' })
   @ResponseMessage('maintenanceCards.responses.work_created')
   createRequiredWork(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: RequiredWorkInputDto,
   ) {
     return this.service.createRequiredWork(id, dto);
@@ -82,8 +82,8 @@ export class MaintenanceCardsController {
   @ApiOperation({ summary: 'Update a work item on an open maintenance card' })
   @ResponseMessage('maintenanceCards.responses.work_updated')
   updateRequiredWork(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Param('workId', ParseUUIDPipe) workId: string,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('workId', ParseIntPipe) workId: number,
     @Body() dto: UpdateRequiredWorkDto,
   ) {
     return this.service.updateRequiredWork(id, workId, dto);
@@ -93,15 +93,15 @@ export class MaintenanceCardsController {
   @ApiOperation({ summary: 'Delete a work item from an open maintenance card' })
   @ResponseMessage('maintenanceCards.responses.work_deleted')
   deleteRequiredWork(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Param('workId', ParseUUIDPipe) workId: string,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('workId', ParseIntPipe) workId: number,
   ) {
     return this.service.deleteRequiredWork(id, workId);
   }
 
   @Post(':id/close')
   @ResponseMessage('maintenanceCards.responses.closed')
-  close(@Param('id', ParseUUIDPipe) id: string, @GetUser('id') userId: string) {
+  close(@Param('id', ParseIntPipe) id: number, @GetUser('id') userId: number) {
     return this.service.close(id, userId);
   }
 
@@ -109,8 +109,8 @@ export class MaintenanceCardsController {
   @Roles(Role.SUPER_ADMIN)
   @ResponseMessage('maintenanceCards.responses.reopened')
   reopen(
-    @Param('id', ParseUUIDPipe) id: string,
-    @GetUser('id') userId: string,
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser('id') userId: number,
     @GetUser('role') role: string,
   ) {
     return this.service.reopen(id, userId, role);

@@ -1,0 +1,1237 @@
+{
+  "info": {
+    "_postman_id": "9690a1f9-0e2a-4a3b-9c8d-6f4e2b1a7c55",
+    "name": "Red Power Garage API",
+    "description": "Complete collection for the Red Power Garage API.\n\nBase URL is stored in the `baseUrl` variable (defaults to http://localhost:3000/api/v1). Set ALLOWED_ORIGINS / CORS accordingly before calling from Postman.\n\n## Authentication\nRun `POST /auth/login` first; its test script stores `accessToken` and `refreshToken` collection variables. The collection applies `Authorization: Bearer {{accessToken}}` automatically except on public routes. `POST /auth/refresh` uses the `refreshToken` variable.\n\n## Response envelope\nAll success responses use:\n```json\n{ \"statusCode\": 200, \"message\": \"translated message\", \"data\": {} }\n```\nAll error responses use:\n```json\n{ \"statusCode\": 400, \"message\": \"translated message\", \"error\": { \"code\": \"validation.invalid_input\", \"details\": [] }, \"timestamp\": \"...\", \"path\": \"/api/v1/...\" }\n```\nMessages are localized via the `Accept-Language` header (`en` or `ar`, default `en`).\n\n## Status codes used by this API\n- 200 OK: successful read / update / delete / login\n- 201 Created: POST create endpoints\n- 400 Bad Request: validation.invalid_input (whitelist rejects unknown fields)\n- 401 Unauthorized: auth.errors.unauthorized (missing/expired token, bad login)\n- 403 Forbidden: common.errors.forbidden (role not allowed)\n- 404 Not Found: common.errors.not_found / database.errors.record_not_found\n- 409 Conflict: database.errors.unique_constraint (duplicate plate/VIN/email)\n- 429 Too Many Requests: throttle (login 5/min, refresh 10/min, logout 20/min)\n- 500 Internal Server Error: system.errors.internal_server_error\n\n## Path variables\nPlaceholder variables: `id`, `cardId`, `photoId`, `workId`, `kind`; replace their values with real UUIDs (or constants for `kind`) before running a request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id",
+      "value": "3f9f1c7e-8f0a-4a6b-9c4d-2a1b3f9e1c00",
+      "type": "string"
+    },
+    {
+      "key": "cardId",
+      "value": "3f9f1c7e-8f0a-4a6b-9c4d-2a1b3f9e1c01",
+      "type": "string"
+    },
+    {
+      "key": "photoId",
+      "value": "3f9f1c7e-8f0a-4a6b-9c4d-2a1b3f9e1c02",
+      "type": "string"
+    },
+    {
+      "key": "workId",
+      "value": "3f9f1c7e-8f0a-4a6b-9c4d-2a1b3f9e1c03",
+      "type": "string"
+    },
+    {
+      "key": "kind",
+      "value": "visit-reasons",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "GET /  Health check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}",
+            "description": "Confirms the API is running. Public route, no authentication.\n\nSuccess:\n- 200 OK (statusCode 200, message from system.responses.api_running)\n\nErrors:\n- 500 if the server is unhealthy"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/login  Authenticate staff",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"user@example.com\",\"password\":\"SecurePass123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Authenticates an active staff account and returns access/refresh tokens. Public route (rate limited: 5 per minute).\n\nThe test script stores `accessToken` and `refreshToken` into collection variables for all other requests.\n\nBody (LoginDto):\n- email: valid email, required\n- password: min 8 chars, must contain upper + lower case and a digit or symbol\n\nSuccess:\n- 200 OK with data: { accessToken, refreshToken, user: { id, email, firstName, lastName, role, createdAt, updatedAt } }\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized (wrong email/password, inactive account)\n- 429 common.errors.too_many_requests"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login returns statusCode 200', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "if (json && json.data && json.data.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /auth/refresh  Rotate tokens",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{refreshToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/auth/refresh",
+            "description": "Rotates the refresh token and returns a fresh access/refresh pair. Requires a valid refresh JWT in `Authorization: Bearer` (uses the {{refreshToken}} variable). Rate limited: 10 per minute.\n\nSuccess:\n- 200 OK with data: { accessToken, refreshToken, user }\n\nErrors:\n- 401 auth.errors.unauthorized (missing/invalid refresh token, revoked session)\n- 429 common.errors.too_many_requests"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/logout  Revoke session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "Revokes the stored refresh session for the authenticated staff account, then returns null data. Requires a valid access JWT (collection-level bearer). Rate limited: 20 per minute.\n\nSuccess:\n- 200 OK, data: null\n\nErrors:\n- 401 auth.errors.unauthorized\n- 429 common.errors.too_many_requests"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users (staff)",
+      "item": [
+        {
+          "name": "GET /users/me  My profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/users/me",
+            "description": "Returns the authenticated staff profile. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK with data: { id, email, firstName, lastName, role, isActive, createdAt, updatedAt }\n\nErrors:\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /users/me  Update my profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstName\":\"UpdatedName\",\"lastName\":\"UpdatedLastName\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/users/me",
+            "description": "Updates the authenticated staff profile. Body: any subset of { firstName?, lastName? }. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK with updated user object\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /users/me/password  Change password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"currentPassword\":\"OldPassword@123\",\"newPassword\":\"NewPassword@123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/users/me/password",
+            "description": "Changes the current staff password. Body (UpdatePasswordDto):\n- currentPassword: required\n- newPassword: min 8 chars, upper + lower case and a digit or symbol\n\nSuccess:\n- 200 OK with data: { message }\n\nErrors:\n- 400 validation.invalid_input (weak new password)\n- 401 auth.errors.unauthorized (wrong current password)\n- 403 common.errors.forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /users/me  Deactivate my account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/users/me",
+            "description": "Deactivates the authenticated staff account. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK, data: null\n\nErrors:\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if the account cannot be found"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /users  List staff (SUPER_ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/users?page=1&limit=10&search=",
+            "description": "Lists staff accounts with pagination and optional search. Role: SUPER_ADMIN only.\n\nQuery (BaseListQueryDto):\n- page: int, min 1 (default 1)\n- limit: int, 1-100 (default 10)\n- search: max 100 chars\n\nSuccess:\n- 200 OK, paginated users\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden (non SUPER_ADMIN)"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /users/:id  Get staff (SUPER_ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/users/{{id}}",
+            "description": "Returns one staff account by id. Role: SUPER_ADMIN only. Path: id (UUID v4).\n\nSuccess:\n- 200 OK with user object\n\nErrors:\n- 400 validation.invalid_input (malformed UUID)\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "POST /customers  Create customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Ahmad Saleh\",\"phone\":\"+962790000000\",\"email\":\"customer@example.com\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/customers",
+            "description": "Creates a customer. Roles: ADMIN, SUPER_ADMIN.\n\nBody (CreateCustomerDto):\n- name: required, max 150\n- phone: required, max 30\n- email: optional, valid email, max 254 (lower-cased on input)\n\nSuccess:\n- 201 Created with created customer\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 409 database.errors.unique_constraint (duplicate email)"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /customers  List & search customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customers?page=1&limit=10&search=&isActive=true",
+            "description": "Searches/lists customers by name, phone, email and active state. Roles: ADMIN, SUPER_ADMIN.\n\nQuery (CustomerListQueryDto):\n- page, limit: pagination (limit max 100)\n- search: max 100 chars\n- isActive: true | false (optional)\n\nSuccess:\n- 200 OK, paginated customers\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /customers/:id  Customer details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customers/{{id}}",
+            "description": "Returns customer details plus currently owned vehicles. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /customers/:id/maintenance-history",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customers/{{id}}/maintenance-history?page=1&limit=10&status=OPEN&receivedFrom=2026-01-01T00:00:00.000Z&receivedTo=2026-12-31T23:59:59.999Z&vehicleId=",
+            "description": "Returns paginated maintenance visits associated with the immutable card customer. Roles: ADMIN, SUPER_ADMIN.\n\nQuery (CustomerMaintenanceHistoryQueryDto):\n- page, limit\n- status: OPEN | CLOSED\n- receivedFrom / receivedTo: ISO date-time, inclusive\n- vehicleId: optional UUID\n\nSuccess:\n- 200 OK with customer summary and paginated visits\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /customers/:id  Update customer",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Ahmad Saleh Al-Zoubi\",\"phone\":\"+962790000000\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/customers/{{id}}",
+            "description": "Updates customer profile data. Body: any subset of CreateCustomerDto fields. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK with updated customer\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found\n- 409 database.errors.unique_constraint (duplicate email)"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /customers/:id/deactivate",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customers/{{id}}/deactivate",
+            "description": "Deactivates a customer without changing ownership history. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK with updated customer\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /customers/:id/activate",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customers/{{id}}/activate",
+            "description": "Reactivates an inactive customer. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK with updated customer\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vehicles & Ownership",
+      "item": [
+        {
+          "name": "POST /vehicles  Create vehicle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"customerId\":\"{{id}}\",\"make\":\"Toyota\",\"model\":\"Corolla\",\"manufactureYear\":2022,\"plateNumber\":\"12-34567\",\"vin\":\"JTDBR32E720123456\",\"color\":\"White\",\"transmission\":\"AUTOMATIC\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/vehicles",
+            "description": "Creates a vehicle together with its initial ownership record. Roles: ADMIN, SUPER_ADMIN.\n\nBody (CreateVehicleDto):\n- customerId: UUID, required (customer must exist)\n- make: required, max 100\n- model: required, max 100\n- manufactureYear: int, 1886..current+1\n- plateNumber: required, max 30 (upper-cased)\n- vin: optional, exactly 17 chars (upper-cased)\n- color: optional, max 50\n- transmission: MANUAL | AUTOMATIC\n\nSuccess:\n- 201 Created with vehicle and ownership\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 409 database.errors.unique_constraint (duplicate plate/VIN)\n- 404 if customer not found"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /vehicles  List & search vehicles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/vehicles?page=1&limit=10&search=&isActive=true&customerId=",
+            "description": "Lists/searches vehicles and returns current-owner summaries. Roles: ADMIN, SUPER_ADMIN.\n\nQuery (VehicleListQueryDto):\n- page, limit\n- search: max 100 chars\n- isActive: true | false\n- customerId: optional UUID filter\n\nSuccess:\n- 200 OK, paginated vehicles with current owners\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /vehicles/:id  Vehicle details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/vehicles/{{id}}",
+            "description": "Returns vehicle details and its current owner. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /vehicles/:id/maintenance-history",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/vehicles/{{id}}/maintenance-history?page=1&limit=10&status=OPEN&receivedFrom=2026-01-01T00:00:00.000Z&receivedTo=2026-12-31T23:59:59.999Z",
+            "description": "Returns maintenance history across all ownership records of a vehicle. Roles: ADMIN, SUPER_ADMIN.\n\nQuery (MaintenanceHistoryQueryDto):\n- page, limit\n- status: OPEN | CLOSED\n- receivedFrom / receivedTo: ISO date-time, inclusive\n\nSuccess:\n- 200 OK with vehicle, current owner, and paginated visits\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /vehicles/:id  Update vehicle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"make\":\"Toyota\",\"model\":\"Corolla\",\"manufactureYear\":2023,\"color\":\"Silver\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/vehicles/{{id}}",
+            "description": "Updates mutable vehicle details. customerId is NOT allowed here (use transfer-ownership). Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK with updated vehicle\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found\n- 409 database.errors.unique_constraint"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /vehicles/:id/deactivate",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/vehicles/{{id}}/deactivate",
+            "description": "Deactivates a vehicle without altering ownership. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK with updated vehicle\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /vehicles/:id/activate",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/vehicles/{{id}}/activate",
+            "description": "Reactivates an inactive vehicle. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK with updated vehicle\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /vehicles/:id/ownership  Ownership history",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/vehicles/{{id}}/ownership",
+            "description": "Returns current owner and the immutable ownership history. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /vehicles/:id/transfer-ownership",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"customerId\":\"3f9f1c7e-8f0a-4a6b-9c4d-2a1b3f9e1c55\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/vehicles/{{id}}/transfer-ownership",
+            "description": "Transfers an active vehicle to an active customer, closing the previous ownership record and creating a new one. Roles: ADMIN, SUPER_ADMIN.\n\nBody (TransferOwnershipDto):\n- customerId: UUID, required\n\nSuccess:\n- 201 Created with the new ownership record\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if vehicle or customer not found"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Maintenance Cards",
+      "item": [
+        {
+          "name": "POST /maintenance-cards  Create maintenance card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"customerId\":\"{{id}}\",\"vehicleOwnershipId\":\"3f9f1c7e-8f0a-4a6b-9c4d-2a1b3f9e1c66\",\"receivedAt\":\"2026-01-15T09:30:00.000Z\",\"expectedDeliveryAt\":\"2026-01-16T09:30:00.000Z\",\"mileage\":45000,\"fuelLevel\":\"HALF\",\"customerComplaint\":\"Engine noise at high speed\",\"inspectionNotes\":\"No leaks found\",\"customerApproved\":true,\"customerApprovalName\":\"Ahmad Saleh\",\"customerApprovedAt\":\"2026-01-15T09:45:00.000Z\",\"visitReasonIds\":[],\"vehicleConditionOptionIds\":[],\"vehicleItemOptionIds\":[],\"requiredWorks\":[{\"description\":\"Replace oil filter\",\"displayOrder\":1,\"isRequired\":true,\"estimatedCost\":25.5}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/maintenance-cards",
+            "description": "Creates an OPEN maintenance card with its initial status event. Roles: ADMIN, SUPER_ADMIN.\n\nBody (CreateMaintenanceCardDto):\n- customerId: UUID, required\n- vehicleOwnershipId: UUID, required (active ownership record)\n- receivedAt: ISO date-time, required\n- expectedDeliveryAt: optional ISO date-time\n- mileage: int >= 0\n- fuelLevel: EMPTY | QUARTER | HALF | THREE_QUARTERS | FULL\n- customerApproved: boolean, required\n- customerApprovalName: optional (required if approved)\n- customerApprovedAt: optional ISO date-time\n- customerComplaint / inspectionNotes: optional\n- visitReasonIds, vehicleConditionOptionIds, vehicleItemOptionIds: optional UUID arrays (must match active option's kind)\n- requiredWorks: optional array of { description, displayOrder, isRequired?, estimatedCost? }\n\nSuccess:\n- 201 Created\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if customer/ownership/option not found\n- 409 for conflicting state"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /maintenance-cards  List & filter cards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-cards?page=1&limit=10&search=&status=OPEN&customerId=&vehicleId=&receivedFrom=2026-01-01T00:00:00.000Z&receivedTo=2026-12-31T23:59:59.999Z",
+            "description": "Lists/filters cards by number, status, customer, vehicle and received date. Roles: ADMIN, SUPER_ADMIN.\n\nQuery (MaintenanceCardListQueryDto):\n- page, limit\n- search: max 100 chars\n- status: OPEN | CLOSED\n- customerId / vehicleId: optional UUIDs\n- receivedFrom / receivedTo: ISO date-time, inclusive\n\nSuccess:\n- 200 OK, paginated cards\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /maintenance-cards/:id  Card details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-cards/{{id}}",
+            "description": "Returns complete maintenance-card details including works, selections, media and status events. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /maintenance-cards/:id  Update card",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"mileage\":45100,\"customerComplaint\":\"Engine noise at high speed - still present\",\"expectedDeliveryAt\":\"2026-01-17T09:30:00.000Z\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/maintenance-cards/{{id}}",
+            "description": "Updates an OPEN card. Body: any subset of CreateMaintenanceCardDto except customerId, vehicleOwnershipId, receivedAt, requiredWorks. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK with updated card\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found\n- 409 if card is CLOSED"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /maintenance-cards/:id/required-works  Add work item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"description\":\"Replace brake pads\",\"displayOrder\":2,\"isRequired\":true,\"estimatedCost\":120}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/maintenance-cards/{{id}}/required-works",
+            "description": "Adds a work item to an OPEN maintenance card. Roles: ADMIN, SUPER_ADMIN.\n\nBody (RequiredWorkInputDto):\n- description: required, max 2000\n- displayOrder: int >= 0\n- isRequired: optional, default true\n- estimatedCost: optional number >= 0, max 2 decimals (or null)\n\nSuccess:\n- 201 Created with the created work item\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if card not found\n- 409 if card is CLOSED"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /maintenance-cards/:id/required-works/:workId  Update work item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"description\":\"Replace brake pads (front)\",\"estimatedCost\":135,\"status\":\"IN_PROGRESS\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/maintenance-cards/{{id}}/required-works/{{workId}}",
+            "description": "Updates a work item on an OPEN card. Roles: ADMIN, SUPER_ADMIN.\n\nBody (UpdateRequiredWorkDto): subset of RequiredWorkInputDto plus optional status: PENDING | IN_PROGRESS | COMPLETED | CANCELLED.\n\nSuccess:\n- 200 OK with updated work item\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if card/work not found\n- 409 if card is CLOSED"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /maintenance-cards/:id/required-works/:workId",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-cards/{{id}}/required-works/{{workId}}",
+            "description": "Deletes a work item from an OPEN maintenance card. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK, data: null\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if card/work not found\n- 409 if card is CLOSED"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /maintenance-cards/:id/close  Close card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/maintenance-cards/{{id}}/close",
+            "description": "Closes an OPEN card and records the status transition with the acting user. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 201 Created with updated card + status event\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 common.errors.not_found\n- 409 if card is already CLOSED"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /maintenance-cards/:id/reopen  Reopen card (SUPER_ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/maintenance-cards/{{id}}/reopen",
+            "description": "Reopens a CLOSED card and records the status transition. Role: SUPER_ADMIN only.\n\nSuccess:\n- 201 Created with reopened card + status event\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden (ADMIN role)\n- 404 common.errors.not_found\n- 409 if card is already OPEN"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Maintenance Card Media (photos & signature)",
+      "item": [
+        {
+          "name": "POST /maintenance-cards/:cardId/photos  Upload photos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "JPEG/PNG/WebP images. Up to 20 files, 8 MB each."
+                },
+                {
+                  "key": "displayOrder",
+                  "value": "0",
+                  "type": "text",
+                  "description": "Optional integer >= 0."
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/maintenance-cards/{{cardId}}/photos",
+            "description": "Uploads photos to an OPEN card. multipart/form-data with the `files` field (up to 20 files, 8 MB each, JPEG/PNG/WebP only) and optional `displayOrder`. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 201 Created with uploaded photo metadata\n\nErrors:\n- 400 validation.invalid_input / invalid file type\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if card not found\n- 409 if card is CLOSED"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /maintenance-cards/:cardId/photos  List photos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-cards/{{cardId}}/photos",
+            "description": "Returns ordered photo metadata and private content URLs. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if card not found"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /maintenance-cards/:cardId/photos/:photoId/content  Stream photo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-cards/{{cardId}}/photos/{{photoId}}/content",
+            "description": "Streams private photo binary content after ownership verification. Response Content-Type matches the stored image type; headers Cache-Control: private, no-store. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK (binary image body)\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if photo not found"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /maintenance-cards/:cardId/photos/:photoId",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-cards/{{cardId}}/photos/{{photoId}}",
+            "description": "Deletes a photo from an OPEN card. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK, data: null\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if photo not found\n- 409 if card is CLOSED"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /maintenance-cards/:cardId/signature  Upload signature",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "JPEG/PNG/WebP image, max 4 MB."
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/maintenance-cards/{{cardId}}/signature",
+            "description": "Uploads or replaces the optional signature on an OPEN card. multipart/form-data with the `file` field (JPEG/PNG/WebP, max 4 MB). Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 201 Created with signature metadata\n\nErrors:\n- 400 validation.invalid_input / invalid file type\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if card not found\n- 409 if card is CLOSED"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /maintenance-cards/:cardId/signature  Signature metadata",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-cards/{{cardId}}/signature",
+            "description": "Returns signature metadata and its private content URL. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if card or signature not found"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /maintenance-cards/:cardId/signature/content  Stream signature",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-cards/{{cardId}}/signature/content",
+            "description": "Streams private signature binary content. Response Content-Type matches the stored image type; Cache-Control: private, no-store. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK (binary image body)\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if signature not found"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /maintenance-cards/:cardId/signature",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-cards/{{cardId}}/signature",
+            "description": "Deletes the signature from an OPEN card. Roles: ADMIN, SUPER_ADMIN.\n\nSuccess:\n- 200 OK, data: null\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 if signature not found\n- 409 if card is CLOSED"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Maintenance Card Options",
+      "item": [
+        {
+          "name": "GET /maintenance-card-options/:kind  List options",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-card-options/{{kind}}?isActive=true",
+            "description": "Lists configurable options. kind is one of visit-reasons | vehicle-conditions | vehicle-items. Roles: ADMIN, SUPER_ADMIN.\n\nQuery (OptionListQueryDto):\n- isActive: true | false (optional)\n\nSuccess:\n- 200 OK with list of { id, code, label, displayOrder, isActive, ... }\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden\n- 404 maintenanceCardOptions.errors.kind_not_found"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /maintenance-card-options/:kind  Create option (SUPER_ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"code\":\"OIL_CHANGE\",\"label\":\"Oil change\",\"displayOrder\":1}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/maintenance-card-options/{{kind}}",
+            "description": "Creates an option for the given kind. Role: SUPER_ADMIN only.\n\nBody (CreateMaintenanceCardOptionDto):\n- code: required, max 100 (upper-cased)\n- label: required, max 150\n- displayOrder: int >= 0\n\nSuccess:\n- 201 Created with the created option\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden (ADMIN role)\n- 404 maintenanceCardOptions.errors.kind_not_found\n- 409 database.errors.unique_constraint (duplicate code)"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /maintenance-card-options/:kind/:id  Update option (SUPER_ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"label\":\"Oil change (full synthetic)\",\"displayOrder\":2}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/maintenance-card-options/{{kind}}/{{id}}",
+            "description": "Updates an unused option subject to immutability rules (in-use options reject edits). Role: SUPER_ADMIN only.\n\nBody: any subset of CreateMaintenanceCardOptionDto.\n\nSuccess:\n- 200 OK with updated option\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden / immutability violation\n- 404 if option not found\n- 409 database.errors.unique_constraint"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /maintenance-card-options/:kind/:id/activate (SUPER_ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-card-options/{{kind}}/{{id}}/activate",
+            "description": "Reactivates a deactivated option. Role: SUPER_ADMIN only.\n\nSuccess:\n- 200 OK with updated option\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden (ADMIN role)\n- 404 maintenanceCardOptions.errors.kind_not_found / option not found"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /maintenance-card-options/:kind/:id/deactivate (SUPER_ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-card-options/{{kind}}/{{id}}/deactivate",
+            "description": "Deactivates an option without changing historical cards. Role: SUPER_ADMIN only.\n\nSuccess:\n- 200 OK with updated option\n\nErrors:\n- 400 validation.invalid_input\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden (ADMIN role)\n- 404 maintenanceCardOptions.errors.kind_not_found / option not found"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /maintenance-card-options/:kind/:id (SUPER_ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/maintenance-card-options/{{kind}}/{{id}}",
+            "description": "Deletes an unused option when safe (used options are rejected). Role: SUPER_ADMIN only.\n\nSuccess:\n- 200 OK, data: null\n\nErrors:\n- 400 validation.invalid_input / option in use\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden (ADMIN role)\n- 404 maintenanceCardOptions.errors.kind_not_found / option not found"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Search & Dashboard",
+      "item": [
+        {
+          "name": "GET /search  Global search",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/search?q=RP-1001",
+            "description": "Returns up to 10 compact results per category (customers, vehicles, maintenance cards). Roles: ADMIN, SUPER_ADMIN.\n\nQuery (GlobalSearchQueryDto):\n- q: required, trimmed, 2-100 chars\n\nSuccess:\n- 200 OK with grouped results\n\nErrors:\n- 400 validation.invalid_input (q too short/missing)\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /dashboard/stats  Dashboard statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/dashboard/stats",
+            "description": "Returns operational dashboard counts: maintenance cards (today received, open, closed), customers, and vehicles in one response. Roles: ADMIN, SUPER_ADMIN.\n\ntodayReceived uses receivedAt in the Asia/Amman calendar day.\n\nSuccess:\n- 200 OK with DashboardStatsResponseDto\n\nErrors:\n- 401 auth.errors.unauthorized\n- 403 common.errors.forbidden"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

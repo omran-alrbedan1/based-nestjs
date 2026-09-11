@@ -24,6 +24,7 @@ export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refres
   }
 
   async validate(req: Request, payload: { sub: string; refreshId: string }) {
+    const userId = parseInt(payload.sub, 10);
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
@@ -37,7 +38,7 @@ export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refres
     }
 
     const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
+      where: { id: userId },
       select: {
         id: true,
         email: true,

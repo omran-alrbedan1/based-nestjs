@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -46,7 +46,7 @@ export class MaintenanceCardOptionsController {
   create(
     @Param('kind') kind: string,
     @Body() dto: CreateMaintenanceCardOptionDto,
-    @GetUser('id') userId: string,
+    @GetUser('id') userId: number,
     @GetUser('role') role: string,
   ) {
     return this.service.create(this.parseKind(kind), dto, userId, role);
@@ -57,7 +57,7 @@ export class MaintenanceCardOptionsController {
   @ResponseMessage('maintenanceCardOptions.responses.updated')
   update(
     @Param('kind') kind: string,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateMaintenanceCardOptionDto,
     @GetUser('role') role: string,
   ) {
@@ -69,7 +69,7 @@ export class MaintenanceCardOptionsController {
   @ResponseMessage('maintenanceCardOptions.responses.activated')
   activate(
     @Param('kind') kind: string,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @GetUser('role') role: string,
   ) {
     return this.service.setActive(this.parseKind(kind), id, true, role);
@@ -80,7 +80,7 @@ export class MaintenanceCardOptionsController {
   @ResponseMessage('maintenanceCardOptions.responses.deactivated')
   deactivate(
     @Param('kind') kind: string,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @GetUser('role') role: string,
   ) {
     return this.service.setActive(this.parseKind(kind), id, false, role);
@@ -91,7 +91,7 @@ export class MaintenanceCardOptionsController {
   @ResponseMessage('maintenanceCardOptions.responses.deleted')
   delete(
     @Param('kind') kind: string,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @GetUser('role') role: string,
   ) {
     return this.service.delete(this.parseKind(kind), id, role);

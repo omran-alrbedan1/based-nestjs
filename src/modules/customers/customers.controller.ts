@@ -3,7 +3,7 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -54,7 +54,7 @@ export class CustomersController {
   @Get(':id')
   @ApiOperation({ summary: 'Get customer details and currently owned vehicles' })
   @ResponseMessage('customers.responses.retrieved')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.customersService.findOne(id);
   }
 
@@ -63,7 +63,7 @@ export class CustomersController {
   @ApiOkResponse({ description: 'Customer summary and paginated historical visits.' })
   @ResponseMessage('customers.responses.maintenance_history_retrieved')
   maintenanceHistory(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Query() query: CustomerMaintenanceHistoryQueryDto,
   ) {
     return this.customersService.maintenanceHistory(id, query);
@@ -71,19 +71,19 @@ export class CustomersController {
 
   @Patch(':id')
   @ResponseMessage('customers.responses.updated')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateCustomerDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateCustomerDto) {
     return this.customersService.update(id, dto);
   }
 
   @Patch(':id/deactivate')
   @ResponseMessage('customers.responses.deactivated')
-  deactivate(@Param('id', ParseUUIDPipe) id: string) {
+  deactivate(@Param('id', ParseIntPipe) id: number) {
     return this.customersService.deactivate(id);
   }
 
   @Patch(':id/activate')
   @ResponseMessage('customers.responses.activated')
-  activate(@Param('id', ParseUUIDPipe) id: string) {
+  activate(@Param('id', ParseIntPipe) id: number) {
     return this.customersService.activate(id);
   }
 }

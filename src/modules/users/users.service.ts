@@ -28,7 +28,7 @@ export class UsersService {
     updatedAt: true,
   } as const;
 
-  async findOne(userId: string): Promise<UserResponseDto> {
+  async findOne(userId: number): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: this.userSelect,
@@ -59,7 +59,7 @@ export class UsersService {
     return createPaginatedResponse(items, page, limit, total);
   }
 
-  async update(userId: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
+  async update(userId: number, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -88,7 +88,7 @@ export class UsersService {
   }
 
   async updatePassword(
-    userId: string,
+    userId: number,
     updatePasswordDto: UpdatePasswordDto,
   ): Promise<{ message: string }> {
     const { currentPassword, newPassword } = updatePasswordDto;
@@ -129,7 +129,7 @@ export class UsersService {
     return { message: 'password changed successfully' };
   }
 
-  async deleteAccount(userId: string): Promise<null> {
+  async deleteAccount(userId: number): Promise<null> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {

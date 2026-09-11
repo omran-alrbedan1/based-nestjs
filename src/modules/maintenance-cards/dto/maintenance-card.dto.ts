@@ -11,7 +11,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
   Min,
   ValidateNested,
@@ -49,13 +48,17 @@ export class RequiredWorkInputDto {
 }
 
 export class CreateMaintenanceCardDto {
-  @ApiProperty({ format: 'uuid' })
-  @IsUUID('4', { message: i18nValidationMessage('validation.is_uuid') })
-  customerId!: string;
+  @ApiProperty({ example: 1 })
+  @Type(() => Number)
+  @IsInt({ message: i18nValidationMessage('validation.is_int') })
+  @Min(1, { message: i18nValidationMessage('validation.min') })
+  customerId!: number;
 
-  @ApiProperty({ format: 'uuid' })
-  @IsUUID('4', { message: i18nValidationMessage('validation.is_uuid') })
-  vehicleOwnershipId!: string;
+  @ApiProperty({ example: 1 })
+  @Type(() => Number)
+  @IsInt({ message: i18nValidationMessage('validation.is_int') })
+  @Min(1, { message: i18nValidationMessage('validation.min') })
+  vehicleOwnershipId!: number;
 
   @ApiProperty({ format: 'date-time' })
   @IsDateString({}, { message: i18nValidationMessage('validation.is_date_string') })
@@ -104,26 +107,29 @@ export class CreateMaintenanceCardDto {
   @IsDateString({}, { message: i18nValidationMessage('validation.is_date_string') })
   customerApprovedAt?: string;
 
-  @ApiPropertyOptional({ type: [String], format: 'uuid' })
+  @ApiPropertyOptional({ type: [Number] })
   @IsOptional()
   @IsArray({ message: i18nValidationMessage('validation.is_array') })
   @ArrayUnique({ message: i18nValidationMessage('validation.array_unique') })
-  @IsUUID('4', { each: true, message: i18nValidationMessage('validation.is_uuid') })
-  visitReasonIds?: string[];
+  @IsInt({ each: true, message: i18nValidationMessage('validation.is_int') })
+  @Min(1, { each: true, message: i18nValidationMessage('validation.min') })
+  visitReasonIds?: number[];
 
-  @ApiPropertyOptional({ type: [String], format: 'uuid' })
+  @ApiPropertyOptional({ type: [Number] })
   @IsOptional()
   @IsArray({ message: i18nValidationMessage('validation.is_array') })
   @ArrayUnique({ message: i18nValidationMessage('validation.array_unique') })
-  @IsUUID('4', { each: true, message: i18nValidationMessage('validation.is_uuid') })
-  vehicleConditionOptionIds?: string[];
+  @IsInt({ each: true, message: i18nValidationMessage('validation.is_int') })
+  @Min(1, { each: true, message: i18nValidationMessage('validation.min') })
+  vehicleConditionOptionIds?: number[];
 
-  @ApiPropertyOptional({ type: [String], format: 'uuid' })
+  @ApiPropertyOptional({ type: [Number] })
   @IsOptional()
   @IsArray({ message: i18nValidationMessage('validation.is_array') })
   @ArrayUnique({ message: i18nValidationMessage('validation.array_unique') })
-  @IsUUID('4', { each: true, message: i18nValidationMessage('validation.is_uuid') })
-  vehicleItemOptionIds?: string[];
+  @IsInt({ each: true, message: i18nValidationMessage('validation.is_int') })
+  @Min(1, { each: true, message: i18nValidationMessage('validation.min') })
+  vehicleItemOptionIds?: number[];
 
   @ApiPropertyOptional({ type: [RequiredWorkInputDto] })
   @IsOptional()

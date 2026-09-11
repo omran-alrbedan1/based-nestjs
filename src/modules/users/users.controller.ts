@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Query, UseGuards } from '@nestjs/common';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { BaseListQueryDto } from 'src/common/dto/base-list-query.dto';
@@ -22,7 +22,7 @@ export class UsersController {
 
   @Get('me')
   @ResponseMessage('users.responses.profile_retrieved')
-  async getProfile(@GetUser('id') userId: string): Promise<UserResponseDto> {
+  async getProfile(@GetUser('id') userId: number): Promise<UserResponseDto> {
     return await this.usersService.findOne(userId);
   }
 
@@ -36,14 +36,14 @@ export class UsersController {
   @Get(':id')
   @Roles(Role.SUPER_ADMIN)
   @ResponseMessage('users.responses.user_retrieved')
-  async findOne(@Param('id') id: string): Promise<UserResponseDto> {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<UserResponseDto> {
     return await this.usersService.findOne(id);
   }
 
   @Patch('me')
   @ResponseMessage('users.responses.user_updated')
   async updateProfile(
-    @GetUser('id') userId: string,
+    @GetUser('id') userId: number,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
     return await this.usersService.update(userId, updateUserDto);
@@ -52,7 +52,7 @@ export class UsersController {
   @Patch('me/password')
   @ResponseMessage('users.responses.password_updated')
   async updatePassword(
-    @GetUser('id') userId: string,
+    @GetUser('id') userId: number,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ): Promise<{ message: string }> {
     return await this.usersService.updatePassword(userId, updatePasswordDto);
@@ -60,7 +60,7 @@ export class UsersController {
 
   @Delete('me')
   @ResponseMessage('users.responses.account_deleted')
-  async deleteAccount(@GetUser('id') userId: string): Promise<null> {
+  async deleteAccount(@GetUser('id') userId: number): Promise<null> {
     return await this.usersService.deleteAccount(userId);
   }
 }

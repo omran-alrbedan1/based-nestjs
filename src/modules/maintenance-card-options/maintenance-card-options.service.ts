@@ -26,7 +26,7 @@ export class MaintenanceCardOptionsService {
   async create(
     kind: OptionKind,
     dto: CreateMaintenanceCardOptionDto,
-    userId: string,
+    userId: number,
     role: string,
   ) {
     this.assertSuperAdmin(role);
@@ -47,7 +47,7 @@ export class MaintenanceCardOptionsService {
     }
   }
 
-  async update(kind: OptionKind, id: string, dto: UpdateMaintenanceCardOptionDto, role: string) {
+  async update(kind: OptionKind, id: number, dto: UpdateMaintenanceCardOptionDto, role: string) {
     this.assertSuperAdmin(role);
     const current = await this.findWithUsage(kind, id);
     if (!current) throw new AppException(404, 'maintenanceCardOptions.errors.not_found');
@@ -78,12 +78,12 @@ export class MaintenanceCardOptionsService {
     }
   }
 
-  setActive(kind: OptionKind, id: string, isActive: boolean, role: string) {
+  setActive(kind: OptionKind, id: number, isActive: boolean, role: string) {
     this.assertSuperAdmin(role);
     return this.updateActive(kind, id, isActive);
   }
 
-  async delete(kind: OptionKind, id: string, role: string): Promise<null> {
+  async delete(kind: OptionKind, id: number, role: string): Promise<null> {
     this.assertSuperAdmin(role);
     const current = await this.findWithUsage(kind, id);
     if (!current) throw new AppException(404, 'maintenanceCardOptions.errors.not_found');
@@ -104,7 +104,7 @@ export class MaintenanceCardOptionsService {
     }
   }
 
-  private async updateActive(kind: OptionKind, id: string, isActive: boolean) {
+  private async updateActive(kind: OptionKind, id: number, isActive: boolean) {
     const exists = await this.findWithUsage(kind, id);
     if (!exists) throw new AppException(404, 'maintenanceCardOptions.errors.not_found');
     const data = { isActive };
@@ -115,7 +115,7 @@ export class MaintenanceCardOptionsService {
     return this.prisma.vehicleItemOption.update({ where: { id }, data });
   }
 
-  private findWithUsage(kind: OptionKind, id: string) {
+  private findWithUsage(kind: OptionKind, id: number) {
     const args = { where: { id }, include: { _count: { select: { cardUsages: true } } } };
     if (kind === 'visitReason') return this.prisma.visitReason.findUnique(args);
     if (kind === 'vehicleCondition') return this.prisma.vehicleConditionOption.findUnique(args);

@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsDateString, IsEnum, IsInt, IsOptional, Min } from 'class-validator';
 import { MaintenanceCardStatus } from 'generated/prisma/client';
 import { i18nValidationMessage } from 'nestjs-i18n';
 import { PaginationQueryDto } from './pagination-query.dto';
@@ -22,8 +23,10 @@ export class MaintenanceHistoryQueryDto extends PaginationQueryDto {
 }
 
 export class CustomerMaintenanceHistoryQueryDto extends MaintenanceHistoryQueryDto {
-  @ApiPropertyOptional({ format: 'uuid' })
+  @ApiPropertyOptional({ example: 1 })
+  @Type(() => Number)
   @IsOptional()
-  @IsUUID('4', { message: i18nValidationMessage('validation.is_uuid') })
-  vehicleId?: string;
+  @IsInt({ message: i18nValidationMessage('validation.is_int') })
+  @Min(1, { message: i18nValidationMessage('validation.min') })
+  vehicleId?: number;
 }

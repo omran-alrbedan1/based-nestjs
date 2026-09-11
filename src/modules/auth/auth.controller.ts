@@ -25,7 +25,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshTokenGuard)
   @ResponseMessage('auth.responses.tokens_refreshed')
-  async refresh(@GetUser('id') userId: string): Promise<AuthResponseDto> {
+  async refresh(@GetUser('id') userId: number): Promise<AuthResponseDto> {
     return this.authService.refreshTokens(userId);
   }
 
@@ -39,7 +39,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @ResponseMessage('auth.responses.user_logged_out')
-  async logout(@GetUser('id') userId: string): Promise<null> {
+  async logout(@GetUser('id') userId: number): Promise<null> {
     await this.authService.logout(userId);
     return null;
   }

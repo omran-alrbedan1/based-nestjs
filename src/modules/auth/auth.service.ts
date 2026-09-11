@@ -21,10 +21,10 @@ export class AuthService {
   ) {}
 
   private async generateTokens(
-    userId: string,
+    userId: number,
     email: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const payload = { sub: userId, email };
+    const payload = { sub: userId.toString(), email };
     const refreshId = randomBytes(16).toString('hex');
     const jwtConfig = getJwtConfiguration(this.configService);
 
@@ -45,7 +45,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async updateRefreshToken(userId: string, refreshToken: string) {
+  private async updateRefreshToken(userId: number, refreshToken: string) {
     const hashedRefreshToken = await bcrypt.hash(refreshToken, this.SALT_ROUNDS);
 
     await this.prisma.user.update({
@@ -54,7 +54,7 @@ export class AuthService {
     });
   }
 
-  async refreshTokens(userId: string): Promise<AuthResponseDto> {
+  async refreshTokens(userId: number): Promise<AuthResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -110,7 +110,7 @@ export class AuthService {
     };
   }
 
-  async logout(userId: string): Promise<void> {
+  async logout(userId: number): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: null },

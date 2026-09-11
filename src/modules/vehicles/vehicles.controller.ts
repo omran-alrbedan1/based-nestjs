@@ -3,7 +3,7 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -55,7 +55,7 @@ export class VehiclesController {
   @Get(':id')
   @ApiOperation({ summary: 'Get vehicle details and current owner' })
   @ResponseMessage('vehicles.responses.retrieved')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.vehiclesService.findOne(id);
   }
 
@@ -64,7 +64,7 @@ export class VehiclesController {
   @ApiOkResponse({ description: 'Vehicle, current owner, and paginated historical visits.' })
   @ResponseMessage('vehicles.responses.maintenance_history_retrieved')
   maintenanceHistory(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Query() query: MaintenanceHistoryQueryDto,
   ) {
     return this.vehiclesService.maintenanceHistory(id, query);
@@ -72,33 +72,33 @@ export class VehiclesController {
 
   @Patch(':id')
   @ResponseMessage('vehicles.responses.updated')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateVehicleDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateVehicleDto) {
     return this.vehiclesService.update(id, dto);
   }
 
   @Patch(':id/deactivate')
   @ResponseMessage('vehicles.responses.deactivated')
-  deactivate(@Param('id', ParseUUIDPipe) id: string) {
+  deactivate(@Param('id', ParseIntPipe) id: number) {
     return this.vehiclesService.deactivate(id);
   }
 
   @Patch(':id/activate')
   @ResponseMessage('vehicles.responses.activated')
-  activate(@Param('id', ParseUUIDPipe) id: string) {
+  activate(@Param('id', ParseIntPipe) id: number) {
     return this.vehiclesService.activate(id);
   }
 
   @Get(':id/ownership')
   @ApiOperation({ summary: 'Get current owner and immutable ownership history' })
   @ResponseMessage('ownership.responses.retrieved')
-  getOwnership(@Param('id', ParseUUIDPipe) id: string) {
+  getOwnership(@Param('id', ParseIntPipe) id: number) {
     return this.vehiclesService.getOwnership(id);
   }
 
   @Post(':id/transfer-ownership')
   @ApiOperation({ summary: 'Transfer an active vehicle to an active customer' })
   @ResponseMessage('ownership.responses.transferred')
-  transfer(@Param('id', ParseUUIDPipe) id: string, @Body() dto: TransferOwnershipDto) {
+  transfer(@Param('id', ParseIntPipe) id: number, @Body() dto: TransferOwnershipDto) {
     return this.vehiclesService.transferOwnership(id, dto);
   }
 }

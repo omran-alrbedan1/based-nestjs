@@ -14,8 +14,5 @@ export class LoginDto {
   @IsNotEmpty({ message: i18nValidationMessage('validation.not_empty') })
   @IsString({ message: i18nValidationMessage('validation.is_string') })
   @MinLength(8, { message: i18nValidationMessage('validation.min_length') })
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: i18nValidationMessage('validation.strong_password'),
-  })
   password!: string;
 }

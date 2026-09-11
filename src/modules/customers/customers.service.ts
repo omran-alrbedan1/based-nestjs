@@ -50,7 +50,7 @@ export class CustomersService {
     return createPaginatedResponse(items, page, limit, total);
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const customer = await this.prisma.customer.findUnique({
       where: { id },
       include: {
@@ -91,7 +91,7 @@ export class CustomersService {
     };
   }
 
-  async maintenanceHistory(id: string, query: CustomerMaintenanceHistoryQueryDto) {
+  async maintenanceHistory(id: number, query: CustomerMaintenanceHistoryQueryDto) {
     const customer = await this.prisma.customer.findUnique({
       where: { id },
       select: { id: true, name: true, phone: true, email: true, isActive: true },
@@ -103,7 +103,7 @@ export class CustomersService {
       ...buildHistoryCardWhere(query),
       customerId: id,
       ...(query.vehicleId ? { vehicleOwnership: { vehicleId: query.vehicleId } } : {}),
-    };
+    } as const;
     const [items, total] = await this.prisma.$transaction([
       this.prisma.maintenanceCard.findMany({
         where,
@@ -134,7 +134,7 @@ export class CustomersService {
     return { customer, history: createPaginatedResponse(items, page, limit, total) };
   }
 
-  async update(id: string, dto: UpdateCustomerDto) {
+  async update(id: number, dto: UpdateCustomerDto) {
     await this.assertExists(id);
     return this.prisma.customer.update({
       where: { id },
@@ -143,15 +143,15 @@ export class CustomersService {
     });
   }
 
-  deactivate(id: string) {
+  deactivate(id: number) {
     return this.setActive(id, false);
   }
 
-  activate(id: string) {
+  activate(id: number) {
     return this.setActive(id, true);
   }
 
-  private async setActive(id: string, isActive: boolean) {
+  private async setActive(id: number, isActive: boolean) {
     await this.assertExists(id);
     return this.prisma.customer.update({
       where: { id },
@@ -160,7 +160,7 @@ export class CustomersService {
     });
   }
 
-  private async assertExists(id: string): Promise<void> {
+  private async assertExists(id: number): Promise<void> {
     const customer = await this.prisma.customer.findUnique({ where: { id }, select: { id: true } });
     if (!customer) throw new AppException(404, 'customers.errors.not_found');
   }

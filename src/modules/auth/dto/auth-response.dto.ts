@@ -1,7 +1,7 @@
 import { Role } from '../../../../generated/prisma/client';
 
 export class AuthUserDto {
-  id!: string;
+  id!: number;
 
   email!: string;
 

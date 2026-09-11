@@ -26,7 +26,7 @@ export class MaintenanceCardsService {
     private readonly validator: MaintenanceCardValidator,
   ) {}
 
-  async create(dto: CreateMaintenanceCardDto, userId: string) {
+  async create(dto: CreateMaintenanceCardDto, userId: number) {
     await this.validator.validateCreate(dto);
 
     try {
@@ -121,7 +121,7 @@ export class MaintenanceCardsService {
     return createPaginatedResponse(items, page, limit, total);
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const card = await this.prisma.maintenanceCard.findUnique({
       where: { id },
       include: maintenanceCardDetailInclude,
@@ -130,7 +130,7 @@ export class MaintenanceCardsService {
     return card;
   }
 
-  async update(id: string, dto: UpdateMaintenanceCardDto) {
+  async update(id: number, dto: UpdateMaintenanceCardDto) {
     const current = await this.prisma.maintenanceCard.findUnique({
       where: { id },
       select: {
@@ -163,7 +163,7 @@ export class MaintenanceCardsService {
     });
   }
 
-  async createRequiredWork(id: string, dto: RequiredWorkInputDto) {
+  async createRequiredWork(id: number, dto: RequiredWorkInputDto) {
     try {
       return await this.prisma.$transaction(async (tx) => {
         await this.lockOpenCard(tx, id);
@@ -179,7 +179,7 @@ export class MaintenanceCardsService {
     }
   }
 
-  async updateRequiredWork(id: string, workId: string, dto: UpdateRequiredWorkDto) {
+  async updateRequiredWork(id: number, workId: number, dto: UpdateRequiredWorkDto) {
     try {
       return await this.prisma.$transaction(async (tx) => {
         await this.lockOpenCard(tx, id);
@@ -218,7 +218,7 @@ export class MaintenanceCardsService {
     }
   }
 
-  async deleteRequiredWork(id: string, workId: string) {
+  async deleteRequiredWork(id: number, workId: number) {
     return this.prisma.$transaction(async (tx) => {
       await this.lockOpenCard(tx, id);
       const deleted = await tx.maintenanceCardRequiredWork.deleteMany({
@@ -231,11 +231,11 @@ export class MaintenanceCardsService {
     });
   }
 
-  close(id: string, userId: string) {
+  close(id: number, userId: number) {
     return this.changeStatus(id, MaintenanceCardStatus.OPEN, MaintenanceCardStatus.CLOSED, userId);
   }
 
-  reopen(id: string, userId: string, role: string) {
+  reopen(id: number, userId: number, role: string) {
     if (role !== Role.SUPER_ADMIN) {
       throw new AppException(403, 'maintenanceCards.errors.reopen_forbidden');
     }
@@ -243,14 +243,14 @@ export class MaintenanceCardsService {
   }
 
   private async changeStatus(
-    id: string,
+    id: number,
     fromStatus: MaintenanceCardStatus,
     toStatus: MaintenanceCardStatus,
-    userId: string,
+    userId: number,
   ) {
     return this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`
-        SELECT "id" FROM "maintenance_cards" WHERE "id" = ${id}::uuid FOR UPDATE
+        SELECT "id" FROM "maintenance_cards" WHERE "id" = ${id} FOR UPDATE
       `;
       const exists = await tx.maintenanceCard.findUnique({
         where: { id },
@@ -338,9 +338,9 @@ export class MaintenanceCardsService {
 
   private async createRelatedRows(
     tx: Prisma.TransactionClient,
-    cardId: string,
+    cardId: number,
     dto: CreateMaintenanceCardDto,
-    userId: string,
+    userId: number,
   ): Promise<void> {
     await Promise.all([
       this.createSelections(tx, cardId, dto),
@@ -362,7 +362,7 @@ export class MaintenanceCardsService {
 
   private async replaceRelatedRows(
     tx: Prisma.TransactionClient,
-    cardId: string,
+    cardId: number,
     dto: UpdateMaintenanceCardDto,
   ): Promise<void> {
     if (dto.visitReasonIds !== undefined) {
@@ -404,7 +404,7 @@ export class MaintenanceCardsService {
 
   private async createSelections(
     tx: Prisma.TransactionClient,
-    cardId: string,
+    cardId: number,
     dto: CreateMaintenanceCardDto,
   ): Promise<void> {
     await Promise.all([
@@ -435,7 +435,7 @@ export class MaintenanceCardsService {
     ]);
   }
 
-  private workData(cardId: string, works: RequiredWorkInputDto[]) {
+  private workData(cardId: number, works: RequiredWorkInputDto[]) {
     return works.map(({ description, displayOrder, isRequired, estimatedCost }) => ({
       maintenanceCardId: cardId,
       description: description.trim(),
@@ -446,9 +446,9 @@ export class MaintenanceCardsService {
     }));
   }
 
-  private async lockOpenCard(tx: Prisma.TransactionClient, id: string): Promise<void> {
+  private async lockOpenCard(tx: Prisma.TransactionClient, id: number): Promise<void> {
     await tx.$queryRaw`
-      SELECT "id" FROM "maintenance_cards" WHERE "id" = ${id}::uuid FOR UPDATE
+      SELECT "id" FROM "maintenance_cards" WHERE "id" = ${id} FOR UPDATE
     `;
     const card = await tx.maintenanceCard.findUnique({
       where: { id },

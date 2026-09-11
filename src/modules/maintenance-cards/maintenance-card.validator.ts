@@ -42,7 +42,7 @@ export class MaintenanceCardValidator {
     }
   }
 
-  private async validateOwnership(customerId: string, ownershipId: string): Promise<void> {
+  private async validateOwnership(customerId: number, ownershipId: number): Promise<void> {
     const ownership = await this.prisma.vehicleOwnership.findUnique({
       where: { id: ownershipId },
       select: {
@@ -89,8 +89,8 @@ export class MaintenanceCardValidator {
   }
 
   private async assertActiveCount(
-    ids: string[] | undefined,
-    count: (ids: string[]) => Promise<number>,
+    ids: number[] | undefined,
+    count: (ids: number[]) => Promise<number>,
   ): Promise<void> {
     if (ids === undefined || ids.length === 0) return;
     if ((await count(ids)) !== ids.length) {

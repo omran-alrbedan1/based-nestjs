@@ -15,10 +15,10 @@ export class MaintenanceCardMediaService {
   ) {}
 
   async uploadPhotos(
-    cardId: string,
+    cardId: number,
     files: Express.Multer.File[],
     displayOrder: number | undefined,
-    userId: string,
+    userId: number,
   ) {
     if (!files.length) throw new AppException(400, 'maintenanceMedia.errors.photo_required');
     await this.assertOpenCard(cardId);
@@ -48,7 +48,7 @@ export class MaintenanceCardMediaService {
     }
   }
 
-  async listPhotos(cardId: string) {
+  async listPhotos(cardId: number) {
     await this.assertCardExists(cardId);
     const photos = await this.prisma.maintenanceCardPhoto.findMany({
       where: { maintenanceCardId: cardId },
@@ -57,7 +57,7 @@ export class MaintenanceCardMediaService {
     return photos.map((photo) => this.photoResponse(photo));
   }
 
-  async photoContent(cardId: string, photoId: string) {
+  async photoContent(cardId: number, photoId: number) {
     await this.assertCardExists(cardId);
     const photo = await this.prisma.maintenanceCardPhoto.findUnique({
       where: { id: photoId },
@@ -69,7 +69,7 @@ export class MaintenanceCardMediaService {
     return this.storage.open(photo.storageKey, photo.mimeType);
   }
 
-  async deletePhoto(cardId: string, photoId: string): Promise<void> {
+  async deletePhoto(cardId: number, photoId: number): Promise<void> {
     await this.assertOpenCard(cardId);
     const photo = await this.prisma.maintenanceCardPhoto.findUnique({
       where: { id: photoId },
@@ -89,7 +89,7 @@ export class MaintenanceCardMediaService {
     await this.purgeQuarantine(quarantined.quarantineStorageKey);
   }
 
-  async uploadSignature(cardId: string, file: Express.Multer.File) {
+  async uploadSignature(cardId: number, file: Express.Multer.File) {
     if (!file) throw new AppException(400, 'maintenanceMedia.errors.signature_required');
     const card = await this.assertOpenCard(cardId);
     const saved = await this.storage.save(file, 'signatures');
@@ -112,7 +112,7 @@ export class MaintenanceCardMediaService {
     return this.signatureResponse(cardId, saved.mimeType, saved.sizeBytes);
   }
 
-  async getSignature(cardId: string) {
+  async getSignature(cardId: number) {
     const card = await this.assertCardExists(cardId);
     if (!card.signatureStorageKey)
       throw new AppException(404, 'maintenanceMedia.errors.signature_not_found');
@@ -121,14 +121,14 @@ export class MaintenanceCardMediaService {
     return this.signatureResponse(cardId, file.mimeType, file.sizeBytes);
   }
 
-  async signatureContent(cardId: string) {
+  async signatureContent(cardId: number) {
     const card = await this.assertCardExists(cardId);
     if (!card.signatureStorageKey)
       throw new AppException(404, 'maintenanceMedia.errors.signature_not_found');
     return this.storage.open(card.signatureStorageKey);
   }
 
-  async deleteSignature(cardId: string): Promise<void> {
+  async deleteSignature(cardId: number): Promise<void> {
     const card = await this.assertOpenCard(cardId);
     if (!card.signatureStorageKey)
       throw new AppException(404, 'maintenanceMedia.errors.signature_not_found');
@@ -145,7 +145,7 @@ export class MaintenanceCardMediaService {
     await this.purgeQuarantine(quarantined.quarantineStorageKey);
   }
 
-  private async assertCardExists(cardId: string) {
+  private async assertCardExists(cardId: number) {
     const card = await this.prisma.maintenanceCard.findUnique({
       where: { id: cardId },
       select: { id: true, status: true, signatureStorageKey: true },
@@ -154,7 +154,7 @@ export class MaintenanceCardMediaService {
     return card;
   }
 
-  private async assertOpenCard(cardId: string) {
+  private async assertOpenCard(cardId: number) {
     const card = await this.assertCardExists(cardId);
     if (card.status !== MaintenanceCardStatus.OPEN) {
       throw new AppException(409, 'maintenanceCards.errors.closed_read_only');
@@ -162,7 +162,7 @@ export class MaintenanceCardMediaService {
     return card;
   }
 
-  private async nextPhotoOrder(cardId: string): Promise<number> {
+  private async nextPhotoOrder(cardId: number): Promise<number> {
     const aggregate = await this.prisma.maintenanceCardPhoto.aggregate({
       where: { maintenanceCardId: cardId },
       _max: { displayOrder: true },
@@ -171,13 +171,13 @@ export class MaintenanceCardMediaService {
   }
 
   private photoResponse(photo: {
-    id: string;
+    id: number;
     originalFileName: string | null;
     mimeType: string | null;
     sizeBytes: bigint | null;
     displayOrder: number;
     createdAt: Date;
-    maintenanceCardId: string;
+    maintenanceCardId: number;
   }) {
     return {
       id: photo.id,
@@ -190,7 +190,7 @@ export class MaintenanceCardMediaService {
     };
   }
 
-  private signatureResponse(cardId: string, mimeType: string, sizeBytes: number) {
+  private signatureResponse(cardId: number, mimeType: string, sizeBytes: number) {
     return {
       mimeType,
       sizeBytes: String(sizeBytes),
