@@ -34,18 +34,19 @@ describe('MaintenanceCardOptionsService', () => {
     service = new MaintenanceCardOptionsService(prisma as unknown as PrismaService);
   });
 
-  it('creates normalized options for SUPER_ADMIN', async () => {
+  it('creates normalized bilingual options for SUPER_ADMIN', async () => {
     prisma.visitReason.create.mockResolvedValue({ id: 'option-1' });
     await service.create(
       'visitReason',
-      { code: ' oil ', label: ' Oil change ', displayOrder: 0 },
+      { code: ' oil ', labelEn: ' Oil change ', labelAr: 'تغيير الزيت', displayOrder: 0 },
       'super-1',
       Role.SUPER_ADMIN,
     );
     expect(prisma.visitReason.create).toHaveBeenCalledWith({
       data: {
         code: 'OIL',
-        label: 'Oil change',
+        labelEn: 'Oil change',
+        labelAr: 'تغيير الزيت',
         displayOrder: 0,
         createdByUserId: 'super-1',
       },
@@ -56,7 +57,7 @@ describe('MaintenanceCardOptionsService', () => {
     await expect(
       service.create(
         'visitReason',
-        { code: 'OIL', label: 'Oil', displayOrder: 0 },
+        { code: 'OIL', labelEn: 'Oil', labelAr: 'زيت', displayOrder: 0 },
         'admin-1',
         Role.ADMIN,
       ),
@@ -80,12 +81,21 @@ describe('MaintenanceCardOptionsService', () => {
     prisma.visitReason.findUnique.mockResolvedValue({
       id: 'option-1',
       code: 'OLD',
-      label: 'Old',
+      labelEn: 'Old',
+      labelAr: 'قديم',
       _count: { cardUsages: 1 },
     });
     await expect(
-      service.update('visitReason', 'option-1', { label: 'New' }, Role.SUPER_ADMIN),
+      service.update(
+        'visitReason',
+        'option-1',
+        { labelEn: 'New', labelAr: 'جديد' },
+        Role.SUPER_ADMIN,
+      ),
     ).rejects.toBeInstanceOf(AppException);
+    await expect(
+      service.update('visitReason', 'option-1', { displayOrder: 2 }, Role.SUPER_ADMIN),
+    ).resolves.not.toThrow();
   });
 
   it('prevents deleting a used option', async () => {

@@ -12,8 +12,8 @@ const prisma = new PrismaClient({
 });
 
 async function seedSuperAdmin(): Promise<number> {
-  const email = 'admin@gmail.com';
-  const password = '123456789';
+  const email = (process.env.SUPER_ADMIN_EMAIL ?? 'admin@gmail.com').trim().toLowerCase();
+  const password = process.env.SUPER_ADMIN_PASSWORD ?? '123456789';
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
   const admin = await prisma.user.upsert({
@@ -38,25 +38,36 @@ async function seedSuperAdmin(): Promise<number> {
 
 async function seedVisitReasons(adminId: number): Promise<void> {
   const rows = [
-    { code: 'regular_service', label: 'Regular Service', displayOrder: 1 },
-    { code: 'oil_change', label: 'Oil Change', displayOrder: 2 },
-    { code: 'tire_service', label: 'Tire Service', displayOrder: 3 },
-    { code: 'brake_service', label: 'Brake Service', displayOrder: 4 },
-    { code: 'engine_repair', label: 'Engine Repair', displayOrder: 5 },
-    { code: 'transmission_service', label: 'Transmission Service', displayOrder: 6 },
-    { code: 'electrical_issues', label: 'Electrical Issues', displayOrder: 7 },
-    { code: 'ac_heating', label: 'AC / Heating', displayOrder: 8 },
-    { code: 'inspection', label: 'Inspection', displayOrder: 9 },
-    { code: 'body_work', label: 'Body Work', displayOrder: 10 },
-    { code: 'diagnostic', label: 'Diagnostic', displayOrder: 11 },
-    { code: 'other', label: 'Other', displayOrder: 12 },
+    { code: 'regular_service', labelEn: 'Regular Service', labelAr: 'صيانة دورية', displayOrder: 1 },
+    { code: 'oil_change', labelEn: 'Oil Change', labelAr: 'تغيير الزيت', displayOrder: 2 },
+    { code: 'tire_service', labelEn: 'Tire Service', labelAr: 'خدمة الإطارات', displayOrder: 3 },
+    { code: 'brake_service', labelEn: 'Brake Service', labelAr: 'خدمة الفرامل', displayOrder: 4 },
+    { code: 'engine_repair', labelEn: 'Engine Repair', labelAr: 'إصلاح المحرك', displayOrder: 5 },
+    {
+      code: 'transmission_service',
+      labelEn: 'Transmission Service',
+      labelAr: 'خدمة ناقل الحركة',
+      displayOrder: 6,
+    },
+    {
+      code: 'electrical_issues',
+      labelEn: 'Electrical Issues',
+      labelAr: 'الأعطال الكهربائية',
+      displayOrder: 7,
+    },
+    { code: 'ac_heating', labelEn: 'AC / Heating', labelAr: 'تكييف / تدفئة', displayOrder: 8 },
+    { code: 'inspection', labelEn: 'Inspection', labelAr: 'الفحص الفني', displayOrder: 9 },
+    { code: 'body_work', labelEn: 'Body Work', labelAr: 'أعمال الهيكل', displayOrder: 10 },
+    { code: 'diagnostic', labelEn: 'Diagnostic', labelAr: 'التشخيص', displayOrder: 11 },
+    { code: 'other', labelEn: 'Other', labelAr: 'أخرى', displayOrder: 12 },
   ];
 
   for (const row of rows) {
     await prisma.visitReason.upsert({
       where: { code: row.code },
       update: {
-        label: row.label,
+        labelEn: row.labelEn,
+        labelAr: row.labelAr,
         displayOrder: row.displayOrder,
         isActive: true,
       },
@@ -73,21 +84,37 @@ async function seedVisitReasons(adminId: number): Promise<void> {
 
 async function seedVehicleConditionOptions(adminId: number): Promise<void> {
   const rows = [
-    { code: 'body_condition', label: 'Body Condition', displayOrder: 1 },
-    { code: 'interior_condition', label: 'Interior Condition', displayOrder: 2 },
-    { code: 'tire_condition', label: 'Tire Condition', displayOrder: 3 },
-    { code: 'windshield_condition', label: 'Windshield Condition', displayOrder: 4 },
-    { code: 'lights_condition', label: 'Lights', displayOrder: 5 },
-    { code: 'fluid_levels', label: 'Fluid Levels', displayOrder: 6 },
-    { code: 'battery_condition', label: 'Battery Condition', displayOrder: 7 },
-    { code: 'exhaust_system', label: 'Exhaust System', displayOrder: 8 },
+    { code: 'body_condition', labelEn: 'Body Condition', labelAr: 'حالة الهيكل', displayOrder: 1 },
+    {
+      code: 'interior_condition',
+      labelEn: 'Interior Condition',
+      labelAr: 'حالة المقصورة',
+      displayOrder: 2,
+    },
+    { code: 'tire_condition', labelEn: 'Tire Condition', labelAr: 'حالة الإطارات', displayOrder: 3 },
+    {
+      code: 'windshield_condition',
+      labelEn: 'Windshield Condition',
+      labelAr: 'حالة الزجاج الأمامي',
+      displayOrder: 4,
+    },
+    { code: 'lights_condition', labelEn: 'Lights', labelAr: 'الإضاءة', displayOrder: 5 },
+    { code: 'fluid_levels', labelEn: 'Fluid Levels', labelAr: 'مستويات السوائل', displayOrder: 6 },
+    {
+      code: 'battery_condition',
+      labelEn: 'Battery Condition',
+      labelAr: 'حالة البطارية',
+      displayOrder: 7,
+    },
+    { code: 'exhaust_system', labelEn: 'Exhaust System', labelAr: 'نظام العادم', displayOrder: 8 },
   ];
 
   for (const row of rows) {
     await prisma.vehicleConditionOption.upsert({
       where: { code: row.code },
       update: {
-        label: row.label,
+        labelEn: row.labelEn,
+        labelAr: row.labelAr,
         displayOrder: row.displayOrder,
         isActive: true,
       },
@@ -104,16 +131,16 @@ async function seedVehicleConditionOptions(adminId: number): Promise<void> {
 
 async function seedVehicleItemOptions(adminId: number): Promise<void> {
   const rows = [
-    { code: 'spare_tire', label: 'Spare Tire', displayOrder: 1 },
-    { code: 'jack_and_tools', label: 'Jack & Tools', displayOrder: 2 },
-    { code: 'floor_mats', label: 'Floor Mats', displayOrder: 3 },
-    { code: 'radio_stereo', label: 'Radio / Stereo', displayOrder: 4 },
-    { code: 'antenna', label: 'Antenna', displayOrder: 5 },
-    { code: 'side_mirrors', label: 'Side Mirrors', displayOrder: 6 },
-    { code: 'hubcaps', label: 'Hubcaps', displayOrder: 7 },
-    { code: 'owner_manual', label: 'Owner Manual', displayOrder: 8 },
-    { code: 'first_aid_kit', label: 'First Aid Kit', displayOrder: 9 },
-    { code: 'fire_extinguisher', label: 'Fire Extinguisher', displayOrder: 10 },
+    { code: 'spare_tire', labelEn: 'Spare Tire', labelAr: 'إطار احتياطي', displayOrder: 1 },
+    { code: 'jack_and_tools', labelEn: 'Jack & Tools', labelAr: 'الجك والأدوات', displayOrder: 2 },
+    { code: 'floor_mats', labelEn: 'Floor Mats', labelAr: 'فرش الأرضية', displayOrder: 3 },
+    { code: 'radio_stereo', labelEn: 'Radio / Stereo', labelAr: 'الراديو / الستيريو', displayOrder: 4 },
+    { code: 'antenna', labelEn: 'Antenna', labelAr: 'الهوائي', displayOrder: 5 },
+    { code: 'side_mirrors', labelEn: 'Side Mirrors', labelAr: 'المرايا الجانبية', displayOrder: 6 },
+    { code: 'hubcaps', labelEn: 'Hubcaps', labelAr: 'أغطية العجلات', displayOrder: 7 },
+    { code: 'owner_manual', labelEn: 'Owner Manual', labelAr: 'دليل المالك', displayOrder: 8 },
+    { code: 'first_aid_kit', labelEn: 'First Aid Kit', labelAr: 'حقيبة الإسعافات الأولية', displayOrder: 9 },
+    { code: 'fire_extinguisher', labelEn: 'Fire Extinguisher', labelAr: 'طفاية الحريق', displayOrder: 10 },
   ];
 
   for (const row of rows) {

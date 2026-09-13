@@ -6,6 +6,8 @@ import {
   CreateMaintenanceCardOptionDto,
   UpdateMaintenanceCardOptionDto,
 } from './dto/maintenance-card-option.dto';
+import { toOptionResponse, OptionResponse } from './maintenance-option.mapper';
+import { getRequestLanguage } from 'src/common/utils/locale.util';
 
 export type OptionKind = 'visitReason' | 'vehicleCondition' | 'vehicleItem';
 
@@ -13,14 +15,19 @@ export type OptionKind = 'visitReason' | 'vehicleCondition' | 'vehicleItem';
 export class MaintenanceCardOptionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  list(kind: OptionKind, isActive?: boolean) {
+  async list(kind: OptionKind, isActive?: boolean): Promise<OptionResponse[]> {
     const args = {
       where: isActive === undefined ? {} : { isActive },
       orderBy: [{ displayOrder: 'asc' as const }, { id: 'asc' as const }],
     };
-    if (kind === 'visitReason') return this.prisma.visitReason.findMany(args);
-    if (kind === 'vehicleCondition') return this.prisma.vehicleConditionOption.findMany(args);
-    return this.prisma.vehicleItemOption.findMany(args);
+    const lang = getRequestLanguage();
+    const rows =
+      kind === 'visitReason'
+        ? await this.prisma.visitReason.findMany(args)
+        : kind === 'vehicleCondition'
+          ? await this.prisma.vehicleConditionOption.findMany(args)
+          : await this.prisma.vehicleItemOption.findMany(args);
+    return rows.map((row) => toOptionResponse(row, lang));
   }
 
   async create(
@@ -32,7 +39,8 @@ export class MaintenanceCardOptionsService {
     this.assertSuperAdmin(role);
     const data = {
       code: dto.code.trim().toUpperCase(),
-      label: dto.label.trim(),
+      labelEn: dto.labelEn.trim(),
+      labelAr: dto.labelAr.trim(),
       displayOrder: dto.displayOrder,
       createdByUserId: userId,
     };
@@ -53,22 +61,26 @@ export class MaintenanceCardOptionsService {
     if (!current) throw new AppException(404, 'maintenanceCardOptions.errors.not_found');
     const used = current._count.cardUsages > 0;
     const normalizedCode = dto.code?.trim().toUpperCase();
-    const normalizedLabel = dto.label?.trim();
+    const normalizedEn = dto.labelEn?.trim();
+    const normalizedAr = dto.labelAr?.trim();
     if (
       used &&
       ((normalizedCode !== undefined && normalizedCode !== current.code) ||
-        (normalizedLabel !== undefined && normalizedLabel !== current.label))
+        (normalizedEn !== undefined && normalizedEn !== current.labelEn) ||
+        (normalizedAr !== undefined && normalizedAr !== current.labelAr))
     ) {
       throw new AppException(409, 'maintenanceCardOptions.errors.used_immutable');
     }
     const data = {
       ...(normalizedCode !== undefined ? { code: normalizedCode } : {}),
-      ...(normalizedLabel !== undefined ? { label: normalizedLabel } : {}),
+      ...(normalizedEn !== undefined ? { labelEn: normalizedEn } : {}),
+      ...(normalizedAr !== undefined ? { labelAr: normalizedAr } : {}),
       ...(dto.displayOrder !== undefined ? { displayOrder: dto.displayOrder } : {}),
     };
     try {
-      if (kind === 'visitReason')
+      if (kind === 'visitReason') {
         return await this.prisma.visitReason.update({ where: { id }, data });
+      }
       if (kind === 'vehicleCondition') {
         return await this.prisma.vehicleConditionOption.update({ where: { id }, data });
       }

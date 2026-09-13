@@ -24,12 +24,19 @@ export class CreateMaintenanceCardOptionDto {
   @MaxLength(100, { message: i18nValidationMessage('validation.max_length') })
   code!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'English label stored in the lookup table.' })
   @Transform(trim)
   @IsString({ message: i18nValidationMessage('validation.is_string') })
   @IsNotEmpty({ message: i18nValidationMessage('validation.not_empty') })
   @MaxLength(150, { message: i18nValidationMessage('validation.max_length') })
-  label!: string;
+  labelEn!: string;
+
+  @ApiProperty({ description: 'Arabic label stored in the lookup table.' })
+  @Transform(trim)
+  @IsString({ message: i18nValidationMessage('validation.is_string') })
+  @IsNotEmpty({ message: i18nValidationMessage('validation.not_empty') })
+  @MaxLength(150, { message: i18nValidationMessage('validation.max_length') })
+  labelAr!: string;
 
   @ApiProperty({ minimum: 0 })
   @Type(() => Number)

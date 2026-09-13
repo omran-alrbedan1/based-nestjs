@@ -30,11 +30,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         firstName: true,
         lastName: true,
         role: true,
+        isActive: true,
         password: false,
       },
     });
 
     if (!user) {
+      throw new AppException(401, 'auth.errors.unauthorized');
+    }
+    if (!user.isActive) {
       throw new AppException(401, 'auth.errors.unauthorized');
     }
     return user;

@@ -5,11 +5,15 @@
     "user_retrieved": "User retrieved successfully.",
     "user_updated": "User updated successfully.",
     "password_updated": "Password updated successfully.",
-    "account_deleted": "User account deleted successfully."
+    "account_deleted": "User account deleted successfully.",
+    "employee_created": "Employee account created successfully.",
+    "user_activated": "User activated successfully.",
+    "user_deactivated": "User deactivated successfully."
   },
   "errors": {
     "not_found": "User not found.",
     "email_taken": "Email is already taken.",
-    "same_password": "New password cannot be the same as the current password."
+    "same_password": "New password cannot be the same as the current password.",
+    "cannot_deactivate_self": "You cannot deactivate your own account."
   }
 }

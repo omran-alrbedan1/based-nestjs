@@ -1,4 +1,5 @@
 import * as bcrypt from 'bcrypt';
+import { Role } from 'generated/prisma/client';
 import { AppException } from 'src/common/exceptions/app.exception';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from './users.service';
@@ -14,6 +15,7 @@ type UsersPrismaMock = {
   user: {
     findUnique: jest.Mock;
     findMany: jest.Mock;
+    create: jest.Mock;
     count: jest.Mock;
     update: jest.Mock;
     delete: jest.Mock;
@@ -33,6 +35,7 @@ describe('UsersService', () => {
       user: {
         findUnique: jest.fn(),
         findMany: jest.fn(),
+        create: jest.fn(),
         count: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
@@ -160,5 +163,181 @@ describe('UsersService', () => {
       },
     });
     expect(result).toEqual({ message: 'password changed successfully' });
+  });
+
+  it('creates an employee with normalized email and forces the ADMIN role', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue({
+      id: 12,
+      firstName: 'Ahmad',
+      lastName: 'Ali',
+      email: 'ahmad@example.com',
+      role: Role.ADMIN,
+      isActive: true,
+      createdAt: new Date('2026-09-13T00:00:00.000Z'),
+      updatedAt: new Date('2026-09-13T00:00:00.000Z'),
+    });
+    hashMock.mockResolvedValue('hashed-password');
+
+    const result = await service.createEmployee({
+      firstName: ' Ahmad ',
+      lastName: ' Ali ',
+      email: '  Ahmad@Example.COM ',
+      password: 'StrongPass123!',
+    });
+
+    expect(hashMock).toHaveBeenCalledWith('StrongPass123!', 12);
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          firstName: 'Ahmad',
+          lastName: 'Ali',
+          email: 'ahmad@example.com',
+          password: 'hashed-password',
+          role: Role.ADMIN,
+          isActive: true,
+        },
+      }),
+    );
+    expect(result.role).toBe(Role.ADMIN);
+    expect(result.isActive).toBe(true);
+    expect((result as Record<string, unknown>).password).toBeUndefined();
+  });
+
+  it('rejects creating an employee with a duplicate email', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 7 });
+
+    await expectAppException(
+      service.createEmployee({
+        firstName: 'Ahmad',
+        lastName: 'Ali',
+        email: 'ahmad@example.com',
+        password: 'StrongPass123!',
+      }),
+      409,
+      'users.errors.email_taken',
+    );
+    expect(prisma.user.create).not.toHaveBeenCalled();
+  });
+
+  it('activates a user idempotently', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 12 });
+    prisma.user.update.mockResolvedValue({ id: 12, isActive: true });
+
+    const result = await service.activate(12);
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 12 },
+      data: { isActive: true },
+      select: expect.anything(),
+    });
+    expect(result.isActive).toBe(true);
+  });
+
+  it('throws not found when activating an unknown user', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+
+    await expectAppException(service.activate(999), 404, 'users.errors.not_found');
+  });
+
+  it('deactivates a user and clears its refresh token', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 12 });
+    prisma.user.update.mockResolvedValue({ id: 12, isActive: false });
+
+    const result = await service.deactivate(12, 1);
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 12 },
+      data: { isActive: false, refreshToken: null },
+      select: expect.anything(),
+    });
+    expect(result.isActive).toBe(false);
+  });
+
+  it('prevents a user from deactivating itself', async () => {
+    await expectAppException(
+      service.deactivate(5, 5),
+      400,
+      'users.errors.cannot_deactivate_self',
+    );
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('throws not found when deactivating an unknown user', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+
+    await expectAppException(service.deactivate(999, 1), 404, 'users.errors.not_found');
+  });
+
+  it('updates a managed user with explicit field mapping and normalized email', async () => {
+    const updateUserDto: UpdateUserDto = {
+      email: '  NEW@Example.COM ',
+      firstName: ' NewName ',
+      lastName: null,
+    };
+
+    prisma.user.findUnique.mockResolvedValueOnce({ id: 12, email: 'old@example.com' });
+    prisma.user.update.mockResolvedValue({
+      id: 12,
+      email: 'new@example.com',
+      firstName: 'NewName',
+      lastName: null,
+    });
+
+    const result = await service.updateManagedUser(12, updateUserDto);
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 12 },
+      data: {
+        firstName: 'NewName',
+        lastName: null,
+        email: 'new@example.com',
+      },
+      select: expect.anything(),
+    });
+    expect(result.email).toBe('new@example.com');
+  });
+
+  it('rejects a managed update when the email is taken', async () => {
+    const updateUserDto: UpdateUserDto = {
+      email: 'taken@example.com',
+      firstName: 'Ahmad',
+      lastName: 'Ali',
+    };
+
+    prisma.user.findUnique
+      .mockResolvedValueOnce({ id: 12, email: 'old@example.com' })
+      .mockResolvedValueOnce({ id: 20 });
+
+    await expectAppException(
+      service.updateManagedUser(12, updateUserDto),
+      409,
+      'users.errors.email_taken',
+    );
+  });
+
+  it('filters the user list by isActive and role', async () => {
+    const createdAt = new Date('2026-09-13T00:00:00.000Z');
+    prisma.$transaction.mockResolvedValue([
+      [
+        {
+          id: 12,
+          email: 'ahmad@example.com',
+          firstName: 'Ahmad',
+          lastName: 'Ali',
+          role: Role.ADMIN,
+          isActive: true,
+          createdAt,
+          updatedAt: createdAt,
+        },
+      ],
+      1,
+    ]);
+
+    await service.findAll({ page: 1, limit: 10, isActive: true, role: Role.ADMIN });
+
+    const [findManyArgs, countArgs] = (prisma.$transaction as jest.Mock).mock.calls[0];
+    expect(findManyArgs.where).toEqual({ isActive: true, role: Role.ADMIN });
+    expect(countArgs.where).toEqual({ isActive: true, role: Role.ADMIN });
   });
 });

@@ -187,7 +187,8 @@ model MaintenanceCardStatusEvent {
 model VisitReason {
   id              Int      @id @default(autoincrement())
   code            String   @unique @db.VarChar(100)
-  label           String   @db.VarChar(150)
+  labelEn         String   @map("label_en") @db.VarChar(150)
+  labelAr         String   @map("label_ar") @db.VarChar(150)
   displayOrder    Int      @default(0)
   isActive        Boolean  @default(true)
   createdByUserId Int
@@ -205,7 +206,8 @@ model VisitReason {
 model VehicleConditionOption {
   id              Int      @id @default(autoincrement())
   code            String   @unique @db.VarChar(100)
-  label           String   @db.VarChar(150)
+  labelEn         String   @map("label_en") @db.VarChar(150)
+  labelAr         String   @map("label_ar") @db.VarChar(150)
   displayOrder    Int      @default(0)
   isActive        Boolean  @default(true)
   createdByUserId Int
@@ -223,7 +225,8 @@ model VehicleConditionOption {
 model VehicleItemOption {
   id              Int      @id @default(autoincrement())
   code            String   @unique @db.VarChar(100)
-  label           String   @db.VarChar(150)
+  labelEn         String   @map("label_en") @db.VarChar(150)
+  labelAr         String   @map("label_ar") @db.VarChar(150)
   displayOrder    Int      @default(0)
   isActive        Boolean  @default(true)
   createdByUserId Int

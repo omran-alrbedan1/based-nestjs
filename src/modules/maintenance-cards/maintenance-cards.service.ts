@@ -56,10 +56,11 @@ export class MaintenanceCardsService {
           select: { id: true },
         });
         await this.createRelatedRows(tx, card.id, dto, userId);
-        return tx.maintenanceCard.findUniqueOrThrow({
+        const created = await tx.maintenanceCard.findUniqueOrThrow({
           where: { id: card.id },
           include: maintenanceCardDetailInclude,
         });
+        return this.localizeEmbeddedOptions(created);
       });
     } catch (error) {
       if (this.isUniqueError(error)) {
@@ -127,7 +128,7 @@ export class MaintenanceCardsService {
       include: maintenanceCardDetailInclude,
     });
     if (!card) throw new AppException(404, 'maintenanceCards.errors.not_found');
-    return card;
+    return this.localizeEmbeddedOptions(card);
   }
 
   async update(id: number, dto: UpdateMaintenanceCardDto) {
@@ -156,10 +157,11 @@ export class MaintenanceCardsService {
         throw new AppException(409, 'maintenanceCards.errors.closed_read_only');
       }
       await this.replaceRelatedRows(tx, id, dto);
-      return tx.maintenanceCard.findUniqueOrThrow({
+      const card = await tx.maintenanceCard.findUniqueOrThrow({
         where: { id },
         include: maintenanceCardDetailInclude,
       });
+      return this.localizeEmbeddedOptions(card);
     });
   }
 
@@ -460,8 +462,7 @@ export class MaintenanceCardsService {
     }
   }
 
-  private async nextCardNumber(tx: Prisma.TransactionClient): Promise<string> {
-    const [row] = await tx.$queryRaw<Array<{ sequenceValue: bigint }>>`
+  private async nextCardNumber(tx: Prisma.TransactionClient): Promise<string> {    const [row] = await tx.$queryRaw<Array<{ sequenceValue: bigint }>>`
       SELECT nextval('maintenance_card_number_seq') AS "sequenceValue"
     `;
     return `RP-${new Date().getUTCFullYear()}-${row.sequenceValue.toString().padStart(6, '0')}`;
