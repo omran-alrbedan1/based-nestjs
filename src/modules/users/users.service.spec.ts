@@ -255,11 +255,7 @@ describe('UsersService', () => {
   });
 
   it('prevents a user from deactivating itself', async () => {
-    await expectAppException(
-      service.deactivate(5, 5),
-      400,
-      'users.errors.cannot_deactivate_self',
-    );
+    await expectAppException(service.deactivate(5, 5), 400, 'users.errors.cannot_deactivate_self');
     expect(prisma.user.findUnique).not.toHaveBeenCalled();
   });
 
@@ -336,7 +332,7 @@ describe('UsersService', () => {
 
     await service.findAll({ page: 1, limit: 10, isActive: true, role: Role.ADMIN });
 
-    const [findManyArgs, countArgs] = (prisma.$transaction as jest.Mock).mock.calls[0];
+    const [findManyArgs, countArgs] = prisma.$transaction.mock.calls[0];
     expect(findManyArgs.where).toEqual({ isActive: true, role: Role.ADMIN });
     expect(countArgs.where).toEqual({ isActive: true, role: Role.ADMIN });
   });

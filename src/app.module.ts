@@ -7,7 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './modules/users/users.module';
-import { TransformInterceptor } from './utils/transform.interceptor';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AcceptLanguageResolver, I18nJsonLoader, I18nModule } from 'nestjs-i18n';
 import * as path from 'path';
 import { ApiExceptionFilter } from './common/filters/api-exception.filter';

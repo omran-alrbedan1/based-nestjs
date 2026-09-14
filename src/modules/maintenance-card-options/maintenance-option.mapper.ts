@@ -39,6 +39,9 @@ export function toOptionResponse(option: LocalizedOptionEntity, lang: string): O
 }
 
 /** Variant for callers that already resolved the language ahead of time. */
-export function toOptionResponseOrEnum(option: LocalizedOptionEntity, lang: string): OptionResponse {
+export function toOptionResponseOrEnum(
+  option: LocalizedOptionEntity,
+  lang: string,
+): OptionResponse {
   return toOptionResponse(option, isArabic(lang) ? 'ar' : 'en');
 }

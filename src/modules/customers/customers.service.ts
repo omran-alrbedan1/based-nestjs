@@ -165,7 +165,11 @@ export class CustomersService {
     if (!customer) throw new AppException(404, 'customers.errors.not_found');
   }
 
-  private normalizeCustomer<T extends CreateCustomerDto | UpdateCustomerDto>(dto: T): T {
+  private normalizeCustomer(dto: CreateCustomerDto): CreateCustomerDto;
+  private normalizeCustomer(dto: UpdateCustomerDto): UpdateCustomerDto;
+  private normalizeCustomer(
+    dto: CreateCustomerDto | UpdateCustomerDto,
+  ): CreateCustomerDto | UpdateCustomerDto {
     return {
       ...dto,
       ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),

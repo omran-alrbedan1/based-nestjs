@@ -116,64 +116,6 @@ describe('VehiclesService', () => {
     expect(tx.vehicleOwnership.updateMany).not.toHaveBeenCalled();
   });
 
-  it('ends the old ownership and creates the new ownership atomically', async () => {
-    tx.vehicle.findUnique.mockResolvedValue({ id: 'vehicle-1', isActive: true });
-    tx.customer.findUnique.mockResolvedValue({ id: 'customer-2', isActive: true });
-    tx.vehicleOwnership.findFirst.mockResolvedValue({
-      id: 'ownership-1',
-      customerId: 'customer-1',
-    });
-    tx.vehicleOwnership.updateMany.mockResolvedValue({ count: 1 });
-    tx.vehicleOwnership.create.mockResolvedValue({ id: 'ownership-2' });
-
-    await service.transferOwnership('vehicle-1', { customerId: 'customer-2' });
-
-    const endedAt = tx.vehicleOwnership.updateMany.mock.calls[0][0].data.endedAt;
-    const startedAt = tx.vehicleOwnership.create.mock.calls[0][0].data.startedAt;
-    expect(endedAt).toBe(startedAt);
-    expect(tx.vehicleOwnership.create).toHaveBeenCalled();
-  });
-
-  it('rejects transfer to the same current owner', async () => {
-    tx.vehicle.findUnique.mockResolvedValue({ id: 'vehicle-1', isActive: true });
-    tx.customer.findUnique.mockResolvedValue({ id: 'customer-1', isActive: true });
-    tx.vehicleOwnership.findFirst.mockResolvedValue({
-      id: 'ownership-1',
-      customerId: 'customer-1',
-    });
-
-    await expect(
-      service.transferOwnership('vehicle-1', { customerId: 'customer-1' }),
-    ).rejects.toBeInstanceOf(AppException);
-    expect(tx.vehicleOwnership.updateMany).not.toHaveBeenCalled();
-  });
-
-  it('rejects transfer to an inactive customer and rolls back before writes', async () => {
-    tx.vehicle.findUnique.mockResolvedValue({ id: 'vehicle-1', isActive: true });
-    tx.customer.findUnique.mockResolvedValue({ id: 'customer-2', isActive: false });
-
-    await expect(
-      service.transferOwnership('vehicle-1', { customerId: 'customer-2' }),
-    ).rejects.toBeInstanceOf(AppException);
-    expect(tx.vehicleOwnership.updateMany).not.toHaveBeenCalled();
-    expect(tx.vehicleOwnership.create).not.toHaveBeenCalled();
-  });
-
-  it('surfaces a failed ownership creation so the transaction can roll back', async () => {
-    tx.vehicle.findUnique.mockResolvedValue({ id: 'vehicle-1', isActive: true });
-    tx.customer.findUnique.mockResolvedValue({ id: 'customer-2', isActive: true });
-    tx.vehicleOwnership.findFirst.mockResolvedValue({
-      id: 'ownership-1',
-      customerId: 'customer-1',
-    });
-    tx.vehicleOwnership.updateMany.mockResolvedValue({ count: 1 });
-    tx.vehicleOwnership.create.mockRejectedValue(new Error('database rejected overlap'));
-
-    await expect(
-      service.transferOwnership('vehicle-1', { customerId: 'customer-2' }),
-    ).rejects.toBeInstanceOf(AppException);
-  });
-
   it('returns vehicle history across every ownership record', async () => {
     prisma.vehicle.findUnique.mockResolvedValue({
       id: 'vehicle-1',

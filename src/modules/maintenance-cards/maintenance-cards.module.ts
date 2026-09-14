@@ -6,10 +6,18 @@ import { MaintenanceCardMediaController } from './maintenance-card-media.control
 import { MaintenanceCardMediaService } from './maintenance-card-media.service';
 import { MaintenanceCardsController } from './maintenance-cards.controller';
 import { MaintenanceCardsService } from './maintenance-cards.service';
+import { MaintenanceCardWorkService } from './maintenance-card-work.service';
+import { MaintenanceCardLifecycleService } from './maintenance-card-lifecycle.service';
 
 @Module({
   imports: [PrismaModule, LocalFileStorageModule],
   controllers: [MaintenanceCardsController, MaintenanceCardMediaController],
-  providers: [MaintenanceCardsService, MaintenanceCardValidator, MaintenanceCardMediaService],
+  providers: [
+    MaintenanceCardsService,
+    MaintenanceCardWorkService,
+    MaintenanceCardLifecycleService,
+    MaintenanceCardValidator,
+    MaintenanceCardMediaService,
+  ],
 })
 export class MaintenanceCardsModule {}

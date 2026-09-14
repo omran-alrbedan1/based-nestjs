@@ -9,7 +9,7 @@ import {
 } from 'nestjs-i18n';
 import * as path from 'path';
 import { ApiExceptionFilter } from 'src/common/filters/api-exception.filter';
-import { TransformInterceptor } from 'src/utils/transform.interceptor';
+import { TransformInterceptor } from 'src/common/interceptors/transform.interceptor';
 
 export const httpTestI18nImports = [
   I18nModule.forRoot({

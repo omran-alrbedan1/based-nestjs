@@ -524,7 +524,7 @@ Additional source references for maintaining this guide:
 - [Customer service](../src/modules/customers/customers.service.ts) and [vehicle service](../src/modules/vehicles/vehicles.service.ts): list/detail differences and ownership response shapes.
 - [Card service](../src/modules/maintenance-cards/maintenance-cards.service.ts), [validator](../src/modules/maintenance-cards/maintenance-card.validator.ts), and [detail relations](../src/modules/maintenance-cards/maintenance-card.selects.ts): lifecycle, approval, work, and nested data.
 - [Media controller](../src/modules/maintenance-cards/maintenance-card-media.controller.ts): multipart fields, upload limits, and streaming endpoints.
-- [Response interceptor](../src/utils/transform.interceptor.ts) and [exception filter](../src/common/filters/api-exception.filter.ts): JSON success/error contracts.
+- [Response interceptor](../src/common/interceptors/transform.interceptor.ts) and [exception filter](../src/common/filters/api-exception.filter.ts): JSON success/error contracts.
 - [Dashboard service](../src/modules/dashboard/dashboard.service.ts) and [search service](../src/modules/search/search.service.ts): supported statistics and grouped search.
 
 Verification performed for this revision: read frontend services, hooks, schemas, session/provider structure, and migration plan; cross-checked backend routes, DTOs, services, Prisma schema, and installed throttler key behavior; verified frontend remote HEAD; exercised the profile DTO's whitelist validation locally. No live database/API/browser integration test was performed, and no application code was changed.

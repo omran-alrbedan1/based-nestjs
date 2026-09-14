@@ -56,7 +56,7 @@ Paths below are relative to the root of this backend repository.
 | `src/modules/search/` | Search across customers, vehicles, and cards |
 | `src/modules/dashboard/` | Operational totals for the dashboard home screen |
 | `src/common/` | Shared guards, decorators, pagination, errors, and supporting code |
-| `src/utils/transform.interceptor.ts` | Success response envelope |
+| `src/common/interceptors/transform.interceptor.ts` | Success response envelope |
 | `src/common/filters/api-exception.filter.ts` | Error response envelope |
 | `src/i18n/en/`, `src/i18n/ar/` | English and Arabic messages |
 | `src/prisma/` | Shared database connection service |

@@ -1,10 +1,21 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { Role } from 'generated/prisma/client';
-import { ResponseMessage } from 'src/utils/transform.interceptor';
+import { ResponseMessage } from 'src/common/interceptors/transform.interceptor';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';

@@ -21,12 +21,13 @@ import { MaintenanceHistoryQueryDto } from 'src/common/dto/maintenance-history-q
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
-import { ResponseMessage } from 'src/utils/transform.interceptor';
+import { ResponseMessage } from 'src/common/interceptors/transform.interceptor';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { VehicleListQueryDto } from './dto/vehicle-list-query.dto';
 import { VehiclesService } from './vehicles.service';
+import { VehicleOwnershipService } from './vehicle-ownership.service';
 
 @ApiTags('Vehicles')
 @ApiBearerAuth()
@@ -34,7 +35,10 @@ import { VehiclesService } from './vehicles.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN, Role.SUPER_ADMIN)
 export class VehiclesController {
-  constructor(private readonly vehiclesService: VehiclesService) {}
+  constructor(
+    private readonly vehiclesService: VehiclesService,
+    private readonly vehicleOwnershipService: VehicleOwnershipService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a vehicle with its initial ownership' })
@@ -92,13 +96,13 @@ export class VehiclesController {
   @ApiOperation({ summary: 'Get current owner and immutable ownership history' })
   @ResponseMessage('ownership.responses.retrieved')
   getOwnership(@Param('id', ParseIntPipe) id: number) {
-    return this.vehiclesService.getOwnership(id);
+    return this.vehicleOwnershipService.getOwnership(id);
   }
 
   @Post(':id/transfer-ownership')
   @ApiOperation({ summary: 'Transfer an active vehicle to an active customer' })
   @ResponseMessage('ownership.responses.transferred')
   transfer(@Param('id', ParseIntPipe) id: number, @Body() dto: TransferOwnershipDto) {
-    return this.vehiclesService.transferOwnership(id, dto);
+    return this.vehicleOwnershipService.transferOwnership(id, dto);
   }
 }

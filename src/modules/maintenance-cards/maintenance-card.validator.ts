@@ -122,9 +122,6 @@ export class MaintenanceCardValidator {
   }
 
   private hasApprovalMetadata(dto: UpdateMaintenanceCardDto): boolean {
-    return (
-      dto.customerApprovalName !== undefined ||
-      dto.customerApprovedAt !== undefined
-    );
+    return dto.customerApprovalName !== undefined || dto.customerApprovedAt !== undefined;
   }
 }

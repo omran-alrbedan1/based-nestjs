@@ -1,23 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import {
-  MaintenanceCardStatus,
-  MaintenanceWorkStatus,
-  Prisma,
-  Role,
-} from 'generated/prisma/client';
+import { MaintenanceCardStatus, Prisma } from 'generated/prisma/client';
 import { AppException } from 'src/common/exceptions/app.exception';
 import { createPaginatedResponse, normalizeListQuery } from 'src/common/utils/pagination.util';
+import { hasPrismaErrorCode } from 'src/common/utils/prisma-error.util';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {
-  CreateMaintenanceCardDto,
-  RequiredWorkInputDto,
-  UpdateMaintenanceCardDto,
-  UpdateRequiredWorkDto,
-} from './dto/maintenance-card.dto';
+import { CreateMaintenanceCardDto, UpdateMaintenanceCardDto } from './dto/maintenance-card.dto';
 import { MaintenanceCardListQueryDto } from './dto/maintenance-card-list-query.dto';
+import { localizeEmbeddedOptions } from './maintenance-card.mapper';
 import { maintenanceCardDetailInclude } from './maintenance-card.selects';
 import { MaintenanceCardValidator } from './maintenance-card.validator';
 import { buildMaintenanceCardWhere } from './maintenance-cards.query-builder';
+import { buildWorkRow } from './maintenance-card-work.service';
 
 @Injectable()
 export class MaintenanceCardsService {
@@ -60,14 +53,13 @@ export class MaintenanceCardsService {
           where: { id: card.id },
           include: maintenanceCardDetailInclude,
         });
-        return this.localizeEmbeddedOptions(created);
+        return localizeEmbeddedOptions(created);
       });
     } catch (error) {
-      if (this.isUniqueError(error)) {
+      if (hasPrismaErrorCode(error, 'P2002')) {
         throw new AppException(409, 'maintenanceCards.errors.duplicate_number');
       }
-      if (error instanceof AppException) throw error;
-      throw new AppException(500, 'database.errors.operation_failed');
+      throw error;
     }
   }
 
@@ -128,7 +120,7 @@ export class MaintenanceCardsService {
       include: maintenanceCardDetailInclude,
     });
     if (!card) throw new AppException(404, 'maintenanceCards.errors.not_found');
-    return this.localizeEmbeddedOptions(card);
+    return localizeEmbeddedOptions(card);
   }
 
   async update(id: number, dto: UpdateMaintenanceCardDto) {
@@ -161,147 +153,7 @@ export class MaintenanceCardsService {
         where: { id },
         include: maintenanceCardDetailInclude,
       });
-      return this.localizeEmbeddedOptions(card);
-    });
-  }
-
-  async createRequiredWork(id: number, dto: RequiredWorkInputDto) {
-    try {
-      return await this.prisma.$transaction(async (tx) => {
-        await this.lockOpenCard(tx, id);
-        return tx.maintenanceCardRequiredWork.create({
-          data: this.workData(id, [dto])[0],
-        });
-      });
-    } catch (error) {
-      if (this.isUniqueError(error)) {
-        throw new AppException(409, 'maintenanceCards.errors.duplicate_work_order');
-      }
-      throw error;
-    }
-  }
-
-  async updateRequiredWork(id: number, workId: number, dto: UpdateRequiredWorkDto) {
-    try {
-      return await this.prisma.$transaction(async (tx) => {
-        await this.lockOpenCard(tx, id);
-        const work = await tx.maintenanceCardRequiredWork.findFirst({
-          where: { id: workId, maintenanceCardId: id },
-          select: { id: true },
-        });
-        if (!work) throw new AppException(404, 'maintenanceCards.errors.work_not_found');
-        const status = dto.status;
-        return tx.maintenanceCardRequiredWork.update({
-          where: { id: workId },
-          data: {
-            ...(dto.description !== undefined ? { description: dto.description.trim() } : {}),
-            ...(dto.displayOrder !== undefined ? { displayOrder: dto.displayOrder } : {}),
-            ...(dto.isRequired !== undefined ? { isRequired: dto.isRequired } : {}),
-            ...(dto.estimatedCost !== undefined
-              ? {
-                  estimatedCost:
-                    dto.estimatedCost === null ? null : new Prisma.Decimal(dto.estimatedCost),
-                }
-              : {}),
-            ...(status !== undefined
-              ? {
-                  status,
-                  completedAt: status === MaintenanceWorkStatus.COMPLETED ? new Date() : null,
-                }
-              : {}),
-          },
-        });
-      });
-    } catch (error) {
-      if (this.isUniqueError(error)) {
-        throw new AppException(409, 'maintenanceCards.errors.duplicate_work_order');
-      }
-      throw error;
-    }
-  }
-
-  async deleteRequiredWork(id: number, workId: number) {
-    return this.prisma.$transaction(async (tx) => {
-      await this.lockOpenCard(tx, id);
-      const deleted = await tx.maintenanceCardRequiredWork.deleteMany({
-        where: { id: workId, maintenanceCardId: id },
-      });
-      if (deleted.count !== 1) {
-        throw new AppException(404, 'maintenanceCards.errors.work_not_found');
-      }
-      return { id: workId };
-    });
-  }
-
-  close(id: number, userId: number) {
-    return this.changeStatus(id, MaintenanceCardStatus.OPEN, MaintenanceCardStatus.CLOSED, userId);
-  }
-
-  reopen(id: number, userId: number, role: string) {
-    if (role !== Role.SUPER_ADMIN) {
-      throw new AppException(403, 'maintenanceCards.errors.reopen_forbidden');
-    }
-    return this.changeStatus(id, MaintenanceCardStatus.CLOSED, MaintenanceCardStatus.OPEN, userId);
-  }
-
-  private async changeStatus(
-    id: number,
-    fromStatus: MaintenanceCardStatus,
-    toStatus: MaintenanceCardStatus,
-    userId: number,
-  ) {
-    return this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`
-        SELECT "id" FROM "maintenance_cards" WHERE "id" = ${id} FOR UPDATE
-      `;
-      const exists = await tx.maintenanceCard.findUnique({
-        where: { id },
-        select: { status: true },
-      });
-      if (!exists) throw new AppException(404, 'maintenanceCards.errors.not_found');
-      if (exists.status !== fromStatus) {
-        throw new AppException(
-          409,
-          toStatus === MaintenanceCardStatus.CLOSED
-            ? 'maintenanceCards.errors.invalid_close'
-            : 'maintenanceCards.errors.invalid_reopen',
-        );
-      }
-      if (toStatus === MaintenanceCardStatus.CLOSED) {
-        const incompleteRequiredWorks = await tx.maintenanceCardRequiredWork.count({
-          where: {
-            maintenanceCardId: id,
-            isRequired: true,
-            status: { notIn: [MaintenanceWorkStatus.COMPLETED, MaintenanceWorkStatus.CANCELLED] },
-          },
-        });
-        if (incompleteRequiredWorks > 0) {
-          throw new AppException(409, 'maintenanceCards.errors.required_work_incomplete');
-        }
-      }
-      const changedAt = new Date();
-      const changed = await tx.maintenanceCard.updateMany({
-        where: { id, status: fromStatus },
-        data:
-          toStatus === MaintenanceCardStatus.CLOSED
-            ? { status: toStatus, closedAt: changedAt, closedByUserId: userId }
-            : { status: toStatus, closedAt: null, closedByUserId: null },
-      });
-      if (changed.count !== 1) {
-        throw new AppException(
-          409,
-          toStatus === MaintenanceCardStatus.CLOSED
-            ? 'maintenanceCards.errors.invalid_close'
-            : 'maintenanceCards.errors.invalid_reopen',
-        );
-      }
-      await tx.maintenanceCardStatusEvent.create({
-        data: { maintenanceCardId: id, fromStatus, toStatus, changedByUserId: userId },
-      });
-      return tx.maintenanceCard.findUniqueOrThrow({
-        where: { id },
-        include: maintenanceCardDetailInclude,
-      });
+      return localizeEmbeddedOptions(card);
     });
   }
 
@@ -348,7 +200,7 @@ export class MaintenanceCardsService {
       this.createSelections(tx, cardId, dto),
       dto.requiredWorks?.length
         ? tx.maintenanceCardRequiredWork.createMany({
-            data: this.workData(cardId, dto.requiredWorks),
+            data: dto.requiredWorks.map((w) => buildWorkRow(cardId, w)),
           })
         : Promise.resolve(),
       tx.maintenanceCardStatusEvent.create({
@@ -437,32 +289,8 @@ export class MaintenanceCardsService {
     ]);
   }
 
-  private workData(cardId: number, works: RequiredWorkInputDto[]) {
-    return works.map(({ description, displayOrder, isRequired, estimatedCost }) => ({
-      maintenanceCardId: cardId,
-      description: description.trim(),
-      displayOrder,
-      isRequired: isRequired ?? true,
-      estimatedCost:
-        estimatedCost == null ? estimatedCost : new Prisma.Decimal(estimatedCost),
-    }));
-  }
-
-  private async lockOpenCard(tx: Prisma.TransactionClient, id: number): Promise<void> {
-    await tx.$queryRaw`
-      SELECT "id" FROM "maintenance_cards" WHERE "id" = ${id} FOR UPDATE
-    `;
-    const card = await tx.maintenanceCard.findUnique({
-      where: { id },
-      select: { status: true },
-    });
-    if (!card) throw new AppException(404, 'maintenanceCards.errors.not_found');
-    if (card.status === MaintenanceCardStatus.CLOSED) {
-      throw new AppException(409, 'maintenanceCards.errors.closed_read_only');
-    }
-  }
-
-  private async nextCardNumber(tx: Prisma.TransactionClient): Promise<string> {    const [row] = await tx.$queryRaw<Array<{ sequenceValue: bigint }>>`
+  private async nextCardNumber(tx: Prisma.TransactionClient): Promise<string> {
+    const [row] = await tx.$queryRaw<Array<{ sequenceValue: bigint }>>`
       SELECT nextval('maintenance_card_number_seq') AS "sequenceValue"
     `;
     return `RP-${new Date().getUTCFullYear()}-${row.sequenceValue.toString().padStart(6, '0')}`;
@@ -471,9 +299,5 @@ export class MaintenanceCardsService {
   private optionalText(value?: string): string | null {
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
-  }
-
-  private isUniqueError(error: unknown): boolean {
-    return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
   }
 }

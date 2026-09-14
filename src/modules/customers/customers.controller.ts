@@ -21,7 +21,7 @@ import { CustomerMaintenanceHistoryQueryDto } from 'src/common/dto/maintenance-h
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
-import { ResponseMessage } from 'src/utils/transform.interceptor';
+import { ResponseMessage } from 'src/common/interceptors/transform.interceptor';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { CustomerListQueryDto } from './dto/customer-list-query.dto';

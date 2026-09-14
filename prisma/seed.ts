@@ -147,7 +147,8 @@ async function seedVehicleItemOptions(adminId: number): Promise<void> {
     await prisma.vehicleItemOption.upsert({
       where: { code: row.code },
       update: {
-        label: row.label,
+        labelEn: row.labelEn,
+        labelAr: row.labelAr,
         displayOrder: row.displayOrder,
         isActive: true,
       },

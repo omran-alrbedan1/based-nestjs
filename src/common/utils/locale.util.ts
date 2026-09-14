@@ -5,7 +5,7 @@ import { I18nContext } from 'nestjs-i18n';
  * context (set by the AcceptLanguageResolver from the Accept-Language
  * header), falling back to the application default (`'en'`).
  *
- * Mirrors the resolution already used by src/utils/transform.interceptor.ts
+ * Mirrors the resolution already used by src/common/interceptors/transform.interceptor.ts
  * so every layer of the API localizes against the exact same value.
  */
 export function getRequestLanguage(): string {

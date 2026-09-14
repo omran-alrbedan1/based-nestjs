@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { AppException } from 'src/common/exceptions/app.exception';
 import { createPaginatedResponse, normalizeListQuery } from 'src/common/utils/pagination.util';
+import { hasPrismaErrorCode } from 'src/common/utils/prisma-error.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
-import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { VehicleListQueryDto } from './dto/vehicle-list-query.dto';
 import { buildVehicleWhere } from './vehicles.query-builder';
@@ -13,28 +13,7 @@ import {
   buildHistoryCardWhere,
   validateHistoryDateRange,
 } from 'src/common/utils/maintenance-history.util';
-
-const vehicleSelect = {
-  id: true,
-  make: true,
-  model: true,
-  manufactureYear: true,
-  plateNumber: true,
-  vin: true,
-  color: true,
-  transmission: true,
-  isActive: true,
-  createdAt: true,
-  updatedAt: true,
-} as const;
-
-const customerSummarySelect = {
-  id: true,
-  name: true,
-  phone: true,
-  email: true,
-  isActive: true,
-} as const;
+import { customerSummarySelect, vehicleSelect } from './vehicles.selects';
 
 @Injectable()
 export class VehiclesService {
@@ -204,81 +183,6 @@ export class VehiclesService {
     return this.setActive(id, true);
   }
 
-  async getOwnership(id: number) {
-    await this.assertVehicleExists(id);
-    const history = await this.prisma.vehicleOwnership.findMany({
-      where: { vehicleId: id },
-      orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
-      select: {
-        id: true,
-        vehicleId: true,
-        customerId: true,
-        startedAt: true,
-        endedAt: true,
-        createdAt: true,
-        updatedAt: true,
-        customer: { select: customerSummarySelect },
-      },
-    });
-    return {
-      currentOwner: history.find(({ endedAt }) => endedAt === null) ?? null,
-      history,
-    };
-  }
-
-  async transferOwnership(vehicleId: number, dto: TransferOwnershipDto) {
-    const transferAt = new Date();
-    try {
-      return await this.prisma.$transaction(async (tx) => {
-        const vehicle = await tx.vehicle.findUnique({
-          where: { id: vehicleId },
-          select: { id: true, isActive: true },
-        });
-        if (!vehicle) throw new AppException(404, 'vehicles.errors.not_found');
-        if (!vehicle.isActive) throw new AppException(409, 'vehicles.errors.inactive');
-
-        const customer = await tx.customer.findUnique({
-          where: { id: dto.customerId },
-          select: { id: true, isActive: true },
-        });
-        if (!customer) throw new AppException(404, 'customers.errors.not_found');
-        if (!customer.isActive) throw new AppException(409, 'customers.errors.inactive');
-
-        const current = await tx.vehicleOwnership.findFirst({
-          where: { vehicleId, endedAt: null },
-          select: { id: true, customerId: true },
-        });
-        if (!current) throw new AppException(409, 'ownership.errors.current_not_found');
-        if (current.customerId === dto.customerId) {
-          throw new AppException(409, 'ownership.errors.same_customer');
-        }
-
-        const ended = await tx.vehicleOwnership.updateMany({
-          where: { id: current.id, endedAt: null },
-          data: { endedAt: transferAt },
-        });
-        if (ended.count !== 1) {
-          throw new AppException(409, 'ownership.errors.concurrent_transfer');
-        }
-
-        return tx.vehicleOwnership.create({
-          data: { vehicleId, customerId: dto.customerId, startedAt: transferAt },
-          select: {
-            id: true,
-            vehicleId: true,
-            customerId: true,
-            startedAt: true,
-            endedAt: true,
-            customer: { select: customerSummarySelect },
-          },
-        });
-      });
-    } catch (error) {
-      if (error instanceof AppException) throw error;
-      throw new AppException(409, 'ownership.errors.invalid_transfer');
-    }
-  }
-
   private async setActive(id: number, isActive: boolean) {
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id },
@@ -291,11 +195,6 @@ export class VehiclesService {
       data: { isActive },
       select: vehicleSelect,
     });
-  }
-
-  private async assertVehicleExists(id: number): Promise<void> {
-    const vehicle = await this.prisma.vehicle.findUnique({ where: { id }, select: { id: true } });
-    if (!vehicle) throw new AppException(404, 'vehicles.errors.not_found');
   }
 
   private async assertUniqueVehicleIdentity(
@@ -326,13 +225,17 @@ export class VehiclesService {
   }
 
   private throwVehicleWriteError(error: unknown): never {
-    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
+    if (hasPrismaErrorCode(error, 'P2002')) {
       throw new AppException(409, 'vehicles.errors.duplicate_vin');
     }
-    throw new AppException(500, 'database.errors.operation_failed');
+    throw error;
   }
 
-  private normalizeVehicle<T extends CreateVehicleDto | UpdateVehicleDto>(dto: T): T {
+  private normalizeVehicle(dto: CreateVehicleDto): CreateVehicleDto;
+  private normalizeVehicle(dto: UpdateVehicleDto): UpdateVehicleDto;
+  private normalizeVehicle(
+    dto: CreateVehicleDto | UpdateVehicleDto,
+  ): CreateVehicleDto | UpdateVehicleDto {
     return {
       ...dto,
       ...(dto.make !== undefined ? { make: dto.make.trim() } : {}),

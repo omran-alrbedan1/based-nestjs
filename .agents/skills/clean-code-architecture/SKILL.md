@@ -28,7 +28,7 @@ This repository already follows a mostly feature-based structure:
 - `src/common/` for cross-cutting concerns such as decorators, DTOs, exceptions, filters, guards, constants, and utilities
 - `src/prisma/` for Prisma integration
 - `src/i18n/` for translated messages
-- `src/utils/transform.interceptor.ts` for shared success-response formatting
+- `src/common/interceptors/transform.interceptor.ts` for shared success-response formatting
 
 Follow that structure unless the user explicitly requests a different architecture.
 

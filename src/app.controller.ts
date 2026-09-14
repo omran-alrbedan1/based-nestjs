@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
-import { ResponseMessage } from './utils/transform.interceptor';
+import { ResponseMessage } from './common/interceptors/transform.interceptor';
 
 @Controller()
 export class AppController {

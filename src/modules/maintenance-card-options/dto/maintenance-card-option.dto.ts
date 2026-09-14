@@ -10,6 +10,7 @@ import {
   Min,
 } from 'class-validator';
 import { i18nValidationMessage } from 'nestjs-i18n';
+import { BaseListQueryDto } from 'src/common/dto/base-list-query.dto';
 
 const trim = ({ value }: TransformFnParams): unknown =>
   typeof value === 'string' ? value.trim() : (value as unknown);
@@ -47,7 +48,7 @@ export class CreateMaintenanceCardOptionDto {
 
 export class UpdateMaintenanceCardOptionDto extends PartialType(CreateMaintenanceCardOptionDto) {}
 
-export class OptionListQueryDto {
+export class OptionListQueryDto extends BaseListQueryDto {
   @ApiPropertyOptional()
   @Transform(({ value }: TransformFnParams): unknown => {
     if (value === 'true') return true;
@@ -56,5 +57,5 @@ export class OptionListQueryDto {
   })
   @IsOptional()
   @IsBoolean({ message: i18nValidationMessage('validation.is_boolean') })
-  isActive?: boolean;
+  isActive?: boolean | string;
 }

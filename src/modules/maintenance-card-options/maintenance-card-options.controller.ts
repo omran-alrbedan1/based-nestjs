@@ -16,14 +16,15 @@ import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
-import { ResponseMessage } from 'src/utils/transform.interceptor';
+import { ResponseMessage } from 'src/common/interceptors/transform.interceptor';
 import { AppException } from 'src/common/exceptions/app.exception';
 import {
   CreateMaintenanceCardOptionDto,
   OptionListQueryDto,
   UpdateMaintenanceCardOptionDto,
 } from './dto/maintenance-card-option.dto';
-import { MaintenanceCardOptionsService, OptionKind } from './maintenance-card-options.service';
+import { OPTION_KIND_ROUTE_MAP, OptionKind } from './maintenance-card-options.constants';
+import { MaintenanceCardOptionsService } from './maintenance-card-options.service';
 
 @ApiTags('Maintenance Card Options')
 @ApiBearerAuth()
@@ -34,10 +35,10 @@ export class MaintenanceCardOptionsController {
   constructor(private readonly service: MaintenanceCardOptionsService) {}
 
   @Get(':kind')
-  @ApiOperation({ summary: 'List configurable maintenance-card options' })
+  @ApiOperation({ summary: 'List configurable maintenance-card options (paginated, filterable)' })
   @ResponseMessage('maintenanceCardOptions.responses.list_retrieved')
   list(@Param('kind') kind: string, @Query() query: OptionListQueryDto) {
-    return this.service.list(this.parseKind(kind), query.isActive);
+    return this.service.list(this.parseKind(kind), query);
   }
 
   @Post(':kind')
@@ -47,7 +48,7 @@ export class MaintenanceCardOptionsController {
     @Param('kind') kind: string,
     @Body() dto: CreateMaintenanceCardOptionDto,
     @GetUser('id') userId: number,
-    @GetUser('role') role: string,
+    @GetUser('role') role: Role,
   ) {
     return this.service.create(this.parseKind(kind), dto, userId, role);
   }
@@ -59,7 +60,7 @@ export class MaintenanceCardOptionsController {
     @Param('kind') kind: string,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateMaintenanceCardOptionDto,
-    @GetUser('role') role: string,
+    @GetUser('role') role: Role,
   ) {
     return this.service.update(this.parseKind(kind), id, dto, role);
   }
@@ -70,7 +71,7 @@ export class MaintenanceCardOptionsController {
   activate(
     @Param('kind') kind: string,
     @Param('id', ParseIntPipe) id: number,
-    @GetUser('role') role: string,
+    @GetUser('role') role: Role,
   ) {
     return this.service.setActive(this.parseKind(kind), id, true, role);
   }
@@ -81,7 +82,7 @@ export class MaintenanceCardOptionsController {
   deactivate(
     @Param('kind') kind: string,
     @Param('id', ParseIntPipe) id: number,
-    @GetUser('role') role: string,
+    @GetUser('role') role: Role,
   ) {
     return this.service.setActive(this.parseKind(kind), id, false, role);
   }
@@ -92,18 +93,13 @@ export class MaintenanceCardOptionsController {
   delete(
     @Param('kind') kind: string,
     @Param('id', ParseIntPipe) id: number,
-    @GetUser('role') role: string,
+    @GetUser('role') role: Role,
   ) {
     return this.service.delete(this.parseKind(kind), id, role);
   }
 
   private parseKind(value: string): OptionKind {
-    const kinds: Record<string, OptionKind> = {
-      'visit-reasons': 'visitReason',
-      'vehicle-conditions': 'vehicleCondition',
-      'vehicle-items': 'vehicleItem',
-    };
-    const kind = kinds[value];
+    const kind = OPTION_KIND_ROUTE_MAP[value as keyof typeof OPTION_KIND_ROUTE_MAP];
     if (!kind) throw new AppException(404, 'maintenanceCardOptions.errors.kind_not_found');
     return kind;
   }

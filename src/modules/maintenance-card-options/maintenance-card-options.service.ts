@@ -1,41 +1,46 @@
 import { Injectable } from '@nestjs/common';
 import { Role } from 'generated/prisma/client';
 import { AppException } from 'src/common/exceptions/app.exception';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { getRequestLanguage } from 'src/common/utils/locale.util';
+import { createPaginatedResponse, normalizeListQuery } from 'src/common/utils/pagination.util';
+import { hasPrismaErrorCode } from 'src/common/utils/prisma-error.util';
 import {
   CreateMaintenanceCardOptionDto,
+  OptionListQueryDto,
   UpdateMaintenanceCardOptionDto,
 } from './dto/maintenance-card-option.dto';
-import { toOptionResponse, OptionResponse } from './maintenance-option.mapper';
-import { getRequestLanguage } from 'src/common/utils/locale.util';
-
-export type OptionKind = 'visitReason' | 'vehicleCondition' | 'vehicleItem';
+import { OptionKind } from './maintenance-card-options.constants';
+import { MaintenanceCardOptionsRepository } from './maintenance-card-options.repository';
+import { toOptionResponse } from './maintenance-option.mapper';
+import { buildOptionWhereInput } from './maintenance-option.query-builder';
 
 @Injectable()
 export class MaintenanceCardOptionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly repository: MaintenanceCardOptionsRepository) {}
 
-  async list(kind: OptionKind, isActive?: boolean): Promise<OptionResponse[]> {
-    const args = {
-      where: isActive === undefined ? {} : { isActive },
+  async list(kind: OptionKind, query: OptionListQueryDto) {
+    const { page, limit, skip, search } = normalizeListQuery(query);
+    const where = buildOptionWhereInput({ search, isActive: query.isActive });
+    const findArgs = {
+      where,
       orderBy: [{ displayOrder: 'asc' as const }, { id: 'asc' as const }],
+      skip,
+      take: limit,
     };
     const lang = getRequestLanguage();
-    const rows =
-      kind === 'visitReason'
-        ? await this.prisma.visitReason.findMany(args)
-        : kind === 'vehicleCondition'
-          ? await this.prisma.vehicleConditionOption.findMany(args)
-          : await this.prisma.vehicleItemOption.findMany(args);
-    return rows.map((row) => toOptionResponse(row, lang));
+    const [rows, total] = await Promise.all([
+      this.repository.findMany(kind, findArgs),
+      this.repository.count(kind, where),
+    ]);
+    return createPaginatedResponse(
+      rows.map((row) => toOptionResponse(row, lang)),
+      page,
+      limit,
+      total,
+    );
   }
 
-  async create(
-    kind: OptionKind,
-    dto: CreateMaintenanceCardOptionDto,
-    userId: number,
-    role: string,
-  ) {
+  async create(kind: OptionKind, dto: CreateMaintenanceCardOptionDto, userId: number, role: Role) {
     this.assertSuperAdmin(role);
     const data = {
       code: dto.code.trim().toUpperCase(),
@@ -45,17 +50,13 @@ export class MaintenanceCardOptionsService {
       createdByUserId: userId,
     };
     try {
-      if (kind === 'visitReason') return await this.prisma.visitReason.create({ data });
-      if (kind === 'vehicleCondition') {
-        return await this.prisma.vehicleConditionOption.create({ data });
-      }
-      return await this.prisma.vehicleItemOption.create({ data });
+      return await this.repository.create(kind, data);
     } catch (error) {
       this.throwWriteError(error);
     }
   }
 
-  async update(kind: OptionKind, id: number, dto: UpdateMaintenanceCardOptionDto, role: string) {
+  async update(kind: OptionKind, id: number, dto: UpdateMaintenanceCardOptionDto, role: Role) {
     this.assertSuperAdmin(role);
     const current = await this.findWithUsage(kind, id);
     if (!current) throw new AppException(404, 'maintenanceCardOptions.errors.not_found');
@@ -78,24 +79,18 @@ export class MaintenanceCardOptionsService {
       ...(dto.displayOrder !== undefined ? { displayOrder: dto.displayOrder } : {}),
     };
     try {
-      if (kind === 'visitReason') {
-        return await this.prisma.visitReason.update({ where: { id }, data });
-      }
-      if (kind === 'vehicleCondition') {
-        return await this.prisma.vehicleConditionOption.update({ where: { id }, data });
-      }
-      return await this.prisma.vehicleItemOption.update({ where: { id }, data });
+      return await this.repository.update(kind, id, data);
     } catch (error) {
       this.throwWriteError(error);
     }
   }
 
-  setActive(kind: OptionKind, id: number, isActive: boolean, role: string) {
+  setActive(kind: OptionKind, id: number, isActive: boolean, role: Role) {
     this.assertSuperAdmin(role);
     return this.updateActive(kind, id, isActive);
   }
 
-  async delete(kind: OptionKind, id: number, role: string): Promise<null> {
+  async delete(kind: OptionKind, id: number, role: Role): Promise<null> {
     this.assertSuperAdmin(role);
     const current = await this.findWithUsage(kind, id);
     if (!current) throw new AppException(404, 'maintenanceCardOptions.errors.not_found');
@@ -103,53 +98,36 @@ export class MaintenanceCardOptionsService {
       throw new AppException(409, 'maintenanceCardOptions.errors.used_delete');
     }
     try {
-      if (kind === 'visitReason') await this.prisma.visitReason.delete({ where: { id } });
-      else if (kind === 'vehicleCondition') {
-        await this.prisma.vehicleConditionOption.delete({ where: { id } });
-      } else await this.prisma.vehicleItemOption.delete({ where: { id } });
+      await this.repository.delete(kind, id);
       return null;
     } catch (error) {
-      if (this.hasErrorCode(error, 'P2003')) {
+      if (hasPrismaErrorCode(error, 'P2003')) {
         throw new AppException(409, 'maintenanceCardOptions.errors.used_delete');
       }
-      throw new AppException(500, 'database.errors.operation_failed');
+      this.throwWriteError(error);
     }
   }
 
   private async updateActive(kind: OptionKind, id: number, isActive: boolean) {
     const exists = await this.findWithUsage(kind, id);
     if (!exists) throw new AppException(404, 'maintenanceCardOptions.errors.not_found');
-    const data = { isActive };
-    if (kind === 'visitReason') return this.prisma.visitReason.update({ where: { id }, data });
-    if (kind === 'vehicleCondition') {
-      return this.prisma.vehicleConditionOption.update({ where: { id }, data });
-    }
-    return this.prisma.vehicleItemOption.update({ where: { id }, data });
+    return this.repository.update(kind, id, { isActive });
   }
 
   private findWithUsage(kind: OptionKind, id: number) {
-    const args = { where: { id }, include: { _count: { select: { cardUsages: true } } } };
-    if (kind === 'visitReason') return this.prisma.visitReason.findUnique(args);
-    if (kind === 'vehicleCondition') return this.prisma.vehicleConditionOption.findUnique(args);
-    return this.prisma.vehicleItemOption.findUnique(args);
+    return this.repository.findWithUsage(kind, id);
   }
 
-  private assertSuperAdmin(role: string): void {
+  private assertSuperAdmin(role: Role): void {
     if (role !== Role.SUPER_ADMIN) {
       throw new AppException(403, 'maintenanceCardOptions.errors.manage_forbidden');
     }
   }
 
   private throwWriteError(error: unknown): never {
-    if (this.hasErrorCode(error, 'P2002')) {
+    if (hasPrismaErrorCode(error, 'P2002')) {
       throw new AppException(409, 'maintenanceCardOptions.errors.duplicate_code');
     }
-    throw new AppException(500, 'database.errors.operation_failed');
-  }
-
-  private hasErrorCode(error: unknown, expected: string): boolean {
-    if (typeof error !== 'object' || error === null) return false;
-    const candidate = error as Record<string, unknown>;
-    return candidate.code === expected;
+    throw error;
   }
 }

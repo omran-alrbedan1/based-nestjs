@@ -22,7 +22,7 @@ import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
-import { ResponseMessage } from 'src/utils/transform.interceptor';
+import { ResponseMessage } from 'src/common/interceptors/transform.interceptor';
 import {
   CreateMaintenanceCardDto,
   RequiredWorkInputDto,
@@ -31,6 +31,8 @@ import {
 } from './dto/maintenance-card.dto';
 import { MaintenanceCardListQueryDto } from './dto/maintenance-card-list-query.dto';
 import { MaintenanceCardsService } from './maintenance-cards.service';
+import { MaintenanceCardWorkService } from './maintenance-card-work.service';
+import { MaintenanceCardLifecycleService } from './maintenance-card-lifecycle.service';
 
 @ApiTags('Maintenance Cards')
 @ApiBearerAuth()
@@ -38,7 +40,11 @@ import { MaintenanceCardsService } from './maintenance-cards.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN, Role.SUPER_ADMIN)
 export class MaintenanceCardsController {
-  constructor(private readonly service: MaintenanceCardsService) {}
+  constructor(
+    private readonly service: MaintenanceCardsService,
+    private readonly workService: MaintenanceCardWorkService,
+    private readonly lifecycleService: MaintenanceCardLifecycleService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create an open maintenance card and initial status event' })
@@ -71,11 +77,8 @@ export class MaintenanceCardsController {
   @Post(':id/required-works')
   @ApiOperation({ summary: 'Add a work item to an open maintenance card' })
   @ResponseMessage('maintenanceCards.responses.work_created')
-  createRequiredWork(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: RequiredWorkInputDto,
-  ) {
-    return this.service.createRequiredWork(id, dto);
+  createRequiredWork(@Param('id', ParseIntPipe) id: number, @Body() dto: RequiredWorkInputDto) {
+    return this.workService.createRequiredWork(id, dto);
   }
 
   @Patch(':id/required-works/:workId')
@@ -86,7 +89,7 @@ export class MaintenanceCardsController {
     @Param('workId', ParseIntPipe) workId: number,
     @Body() dto: UpdateRequiredWorkDto,
   ) {
-    return this.service.updateRequiredWork(id, workId, dto);
+    return this.workService.updateRequiredWork(id, workId, dto);
   }
 
   @Delete(':id/required-works/:workId')
@@ -96,13 +99,13 @@ export class MaintenanceCardsController {
     @Param('id', ParseIntPipe) id: number,
     @Param('workId', ParseIntPipe) workId: number,
   ) {
-    return this.service.deleteRequiredWork(id, workId);
+    return this.workService.deleteRequiredWork(id, workId);
   }
 
   @Post(':id/close')
   @ResponseMessage('maintenanceCards.responses.closed')
   close(@Param('id', ParseIntPipe) id: number, @GetUser('id') userId: number) {
-    return this.service.close(id, userId);
+    return this.lifecycleService.close(id, userId);
   }
 
   @Post(':id/reopen')
@@ -111,8 +114,8 @@ export class MaintenanceCardsController {
   reopen(
     @Param('id', ParseIntPipe) id: number,
     @GetUser('id') userId: number,
-    @GetUser('role') role: string,
+    @GetUser('role') role: Role,
   ) {
-    return this.service.reopen(id, userId, role);
+    return this.lifecycleService.reopen(id, userId, role);
   }
 }

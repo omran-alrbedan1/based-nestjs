@@ -30,7 +30,7 @@ This repository uses:
 - `I18nValidationPipe` in `src/main.ts`
 - `AppException` in `src/common/exceptions/app.exception.ts`
 - `ApiExceptionFilter` in `src/common/filters/api-exception.filter.ts`
-- `ResponseMessage(...)` translation keys translated in `src/utils/transform.interceptor.ts`
+- `ResponseMessage(...)` translation keys translated in `src/common/interceptors/transform.interceptor.ts`
 
 ### Error response shape
 
