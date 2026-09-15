@@ -23,13 +23,16 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { ResponseMessage } from 'src/common/interceptors/transform.interceptor';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import {
   CreateMaintenanceCardDto,
   RequiredWorkInputDto,
   UpdateMaintenanceCardDto,
   UpdateRequiredWorkDto,
 } from './dto/maintenance-card.dto';
+import { ReopenWorkDto, WorkActionReasonDto } from './dto/maintenance-card-work-action.dto';
 import { MaintenanceCardListQueryDto } from './dto/maintenance-card-list-query.dto';
+import { MaintenanceCardActivityService } from './maintenance-card-activity.service';
 import { MaintenanceCardsService } from './maintenance-cards.service';
 import { MaintenanceCardWorkService } from './maintenance-card-work.service';
 import { MaintenanceCardLifecycleService } from './maintenance-card-lifecycle.service';
@@ -44,6 +47,7 @@ export class MaintenanceCardsController {
     private readonly service: MaintenanceCardsService,
     private readonly workService: MaintenanceCardWorkService,
     private readonly lifecycleService: MaintenanceCardLifecycleService,
+    private readonly activityService: MaintenanceCardActivityService,
   ) {}
 
   @Post()
@@ -68,6 +72,14 @@ export class MaintenanceCardsController {
     return this.service.findOne(id);
   }
 
+  @Get(':id/activity')
+  @ApiOperation({ summary: 'Unified card + work activity timeline' })
+  @ApiOkResponse({ description: 'Paginated activity timeline.' })
+  @ResponseMessage('maintenanceCards.responses.activity_retrieved')
+  activity(@Param('id', ParseIntPipe) id: number, @Query() query: PaginationQueryDto) {
+    return this.activityService.getActivity(id, query);
+  }
+
   @Patch(':id')
   @ResponseMessage('maintenanceCards.responses.updated')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMaintenanceCardDto) {
@@ -77,8 +89,12 @@ export class MaintenanceCardsController {
   @Post(':id/required-works')
   @ApiOperation({ summary: 'Add a work item to an open maintenance card' })
   @ResponseMessage('maintenanceCards.responses.work_created')
-  createRequiredWork(@Param('id', ParseIntPipe) id: number, @Body() dto: RequiredWorkInputDto) {
-    return this.workService.createRequiredWork(id, dto);
+  createRequiredWork(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RequiredWorkInputDto,
+    @GetUser('id') userId: number,
+  ) {
+    return this.workService.createRequiredWork(id, dto, userId);
   }
 
   @Patch(':id/required-works/:workId')
@@ -88,18 +104,66 @@ export class MaintenanceCardsController {
     @Param('id', ParseIntPipe) id: number,
     @Param('workId', ParseIntPipe) workId: number,
     @Body() dto: UpdateRequiredWorkDto,
+    @GetUser('id') userId: number,
   ) {
-    return this.workService.updateRequiredWork(id, workId, dto);
+    return this.workService.updateRequiredWork(id, workId, dto, userId);
+  }
+
+  @Post(':id/required-works/:workId/start')
+  @ApiOperation({ summary: 'Start a work item on an open maintenance card' })
+  @ResponseMessage('maintenanceCards.responses.work_started')
+  startWork(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('workId', ParseIntPipe) workId: number,
+    @GetUser('id') userId: number,
+  ) {
+    return this.workService.startWork(id, workId, userId);
+  }
+
+  @Post(':id/required-works/:workId/complete')
+  @ApiOperation({ summary: 'Complete a work item on an open maintenance card' })
+  @ResponseMessage('maintenanceCards.responses.work_completed')
+  completeWork(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('workId', ParseIntPipe) workId: number,
+    @GetUser('id') userId: number,
+  ) {
+    return this.workService.completeWork(id, workId, userId);
+  }
+
+  @Post(':id/required-works/:workId/cancel')
+  @ApiOperation({ summary: 'Cancel a work item with a reason on an open maintenance card' })
+  @ResponseMessage('maintenanceCards.responses.work_cancelled')
+  cancelWork(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('workId', ParseIntPipe) workId: number,
+    @Body() dto: WorkActionReasonDto,
+    @GetUser('id') userId: number,
+  ) {
+    return this.workService.cancelWork(id, workId, dto.reason, userId);
+  }
+
+  @Post(':id/required-works/:workId/reopen')
+  @ApiOperation({ summary: 'Reopen a completed or cancelled work item with a reason' })
+  @ResponseMessage('maintenanceCards.responses.work_reopened')
+  reopenWork(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('workId', ParseIntPipe) workId: number,
+    @Body() dto: ReopenWorkDto,
+    @GetUser('id') userId: number,
+  ) {
+    return this.workService.reopenWork(id, workId, dto.reason, userId, dto.targetStatus);
   }
 
   @Delete(':id/required-works/:workId')
-  @ApiOperation({ summary: 'Delete a work item from an open maintenance card' })
+  @ApiOperation({ summary: 'Remove a not-yet-started work item from an open maintenance card' })
   @ResponseMessage('maintenanceCards.responses.work_deleted')
   deleteRequiredWork(
     @Param('id', ParseIntPipe) id: number,
     @Param('workId', ParseIntPipe) workId: number,
+    @GetUser('id') userId: number,
   ) {
-    return this.workService.deleteRequiredWork(id, workId);
+    return this.workService.deleteRequiredWork(id, workId, userId);
   }
 
   @Post(':id/close')

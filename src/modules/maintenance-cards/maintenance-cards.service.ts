@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { MaintenanceCardStatus, Prisma } from 'generated/prisma/client';
+import {
+  MaintenanceCardStatus,
+  MaintenanceWorkEventType,
+  MaintenanceWorkStatus,
+  Prisma,
+} from 'generated/prisma/client';
 import { AppException } from 'src/common/exceptions/app.exception';
 import { createPaginatedResponse, normalizeListQuery } from 'src/common/utils/pagination.util';
 import { hasPrismaErrorCode } from 'src/common/utils/prisma-error.util';
@@ -198,11 +203,7 @@ export class MaintenanceCardsService {
   ): Promise<void> {
     await Promise.all([
       this.createSelections(tx, cardId, dto),
-      dto.requiredWorks?.length
-        ? tx.maintenanceCardRequiredWork.createMany({
-            data: dto.requiredWorks.map((w) => buildWorkRow(cardId, w)),
-          })
-        : Promise.resolve(),
+      this.createWorkRows(tx, cardId, dto, userId),
       tx.maintenanceCardStatusEvent.create({
         data: {
           maintenanceCardId: cardId,
@@ -212,6 +213,35 @@ export class MaintenanceCardsService {
         },
       }),
     ]);
+  }
+
+  private async createWorkRows(
+    tx: Prisma.TransactionClient,
+    cardId: number,
+    dto: CreateMaintenanceCardDto,
+    userId: number,
+  ): Promise<void> {
+    if (!dto.requiredWorks?.length) return;
+    await tx.maintenanceCardRequiredWork.createMany({
+      data: dto.requiredWorks.map((w) => buildWorkRow(cardId, w)),
+    });
+    const created = await tx.maintenanceCardRequiredWork.findMany({
+      where: { maintenanceCardId: cardId },
+      select: { id: true, description: true },
+    });
+    if (created.length) {
+      await tx.maintenanceWorkEvent.createMany({
+        data: created.map((work) => ({
+          maintenanceCardId: cardId,
+          requiredWorkId: work.id,
+          eventType: MaintenanceWorkEventType.CREATED,
+          fromStatus: null,
+          toStatus: MaintenanceWorkStatus.PENDING,
+          workDescriptionSnapshot: work.description,
+          changedByUserId: userId,
+        })),
+      });
+    }
   }
 
   private async replaceRelatedRows(

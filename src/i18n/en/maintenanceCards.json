@@ -8,7 +8,12 @@
     "reopened": "Maintenance card reopened successfully.",
     "work_created": "Required work created successfully.",
     "work_updated": "Required work updated successfully.",
-    "work_deleted": "Required work deleted successfully."
+    "work_deleted": "Required work deleted successfully.",
+    "work_started": "Required work started successfully.",
+    "work_completed": "Required work completed successfully.",
+    "work_cancelled": "Required work cancelled successfully.",
+    "work_reopened": "Required work reopened successfully.",
+    "activity_retrieved": "Maintenance card activity retrieved successfully."
   },
   "errors": {
     "not_found": "Maintenance card not found.",
@@ -28,6 +33,11 @@
     "reopen_forbidden": "Only a super administrator can reopen a maintenance card.",
     "required_work_incomplete": "All required work must be completed or cancelled before closing the card.",
     "work_not_found": "Required work item not found.",
+    "work_transition_not_allowed": "This work status transition is not allowed.",
+    "work_cancel_reason_required": "A cancellation reason is required to cancel a work item.",
+    "work_reopen_reason_required": "A reason is required to reopen a work item.",
+    "work_transition_conflict": "The work item was changed concurrently. Please try again.",
+    "work_not_removable": "Only work items that were never started can be removed. Cancel the item instead.",
     "ownership_not_current": "The selected vehicle ownership is no longer current.",
     "inactive_customer": "The selected customer is inactive.",
     "inactive_vehicle": "The selected vehicle is inactive."

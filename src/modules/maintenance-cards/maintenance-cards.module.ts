@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { LocalFileStorageModule } from 'src/storage/local-file-storage.module';
+import { MaintenanceCardActivityService } from './maintenance-card-activity.service';
 import { MaintenanceCardValidator } from './maintenance-card.validator';
 import { MaintenanceCardMediaController } from './maintenance-card-media.controller';
 import { MaintenanceCardMediaService } from './maintenance-card-media.service';
@@ -16,6 +17,7 @@ import { MaintenanceCardLifecycleService } from './maintenance-card-lifecycle.se
     MaintenanceCardsService,
     MaintenanceCardWorkService,
     MaintenanceCardLifecycleService,
+    MaintenanceCardActivityService,
     MaintenanceCardValidator,
     MaintenanceCardMediaService,
   ],

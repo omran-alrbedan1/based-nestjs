@@ -1,4 +1,10 @@
-import { FuelLevel, MaintenanceCardStatus, Role } from 'generated/prisma/client';
+import {
+  FuelLevel,
+  MaintenanceCardStatus,
+  MaintenanceWorkEventType,
+  MaintenanceWorkStatus,
+  Role,
+} from 'generated/prisma/client';
 import { AppException } from 'src/common/exceptions/app.exception';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MaintenanceCardValidator } from './maintenance-card.validator';
@@ -19,8 +25,10 @@ describe('MaintenanceCardsService', () => {
     maintenanceCardItemOption: { createMany: jest.fn(), deleteMany: jest.fn() },
     maintenanceCardRequiredWork: {
       createMany: jest.fn(),
+      findMany: jest.fn(),
       deleteMany: jest.fn(),
     },
+    maintenanceWorkEvent: { createMany: jest.fn() },
     maintenanceCardStatusEvent: { create: jest.fn() },
     $queryRaw: jest.fn(),
   };
@@ -61,7 +69,7 @@ describe('MaintenanceCardsService', () => {
     );
   });
 
-  it('creates a normalized card, ordered work, and initial OPEN event', async () => {
+  it('creates a normalized card, ordered work, initial OPEN event, and CREATED work event', async () => {
     prisma.maintenanceCard.findUnique.mockResolvedValue(null);
     tx.maintenanceCard.create.mockResolvedValue({ id: 'card-1' });
     tx.maintenanceCard.findUniqueOrThrow.mockResolvedValue({
@@ -70,6 +78,10 @@ describe('MaintenanceCardsService', () => {
       conditionOptions: [],
       itemOptions: [],
     });
+    tx.maintenanceCardRequiredWork.findMany.mockResolvedValue([
+      { id: 'work-1', description: 'Oil change' },
+    ]);
+    tx.$queryRaw.mockResolvedValue([{ sequenceValue: BigInt(12) }]);
 
     await service.create(createDto, 'user-1');
 
@@ -86,6 +98,19 @@ describe('MaintenanceCardsService', () => {
           displayOrder: 0,
           isRequired: true,
           estimatedCost: undefined,
+        },
+      ],
+    });
+    expect(tx.maintenanceWorkEvent.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          maintenanceCardId: 'card-1',
+          requiredWorkId: 'work-1',
+          eventType: MaintenanceWorkEventType.CREATED,
+          fromStatus: null,
+          toStatus: MaintenanceWorkStatus.PENDING,
+          workDescriptionSnapshot: 'Oil change',
+          changedByUserId: 'user-1',
         },
       ],
     });
@@ -185,7 +210,12 @@ describe('MaintenanceCardLifecycleService', () => {
 
   it('closes OPEN cards and writes the transition event', async () => {
     tx.maintenanceCard.findUnique.mockResolvedValue({ status: MaintenanceCardStatus.OPEN });
-    tx.maintenanceCard.findUniqueOrThrow.mockResolvedValue({ id: 'card-1' });
+    tx.maintenanceCard.findUniqueOrThrow.mockResolvedValue({
+      id: 'card-1',
+      visitReasons: [],
+      conditionOptions: [],
+      itemOptions: [],
+    });
     await lifecycle.close('card-1', 'admin-1');
     expect(tx.maintenanceCardStatusEvent.create).toHaveBeenCalledWith({
       data: {
@@ -211,7 +241,12 @@ describe('MaintenanceCardLifecycleService', () => {
 
   it('reopens for SUPER_ADMIN and clears closure metadata', async () => {
     tx.maintenanceCard.findUnique.mockResolvedValue({ status: MaintenanceCardStatus.CLOSED });
-    tx.maintenanceCard.findUniqueOrThrow.mockResolvedValue({ id: 'card-1' });
+    tx.maintenanceCard.findUniqueOrThrow.mockResolvedValue({
+      id: 'card-1',
+      visitReasons: [],
+      conditionOptions: [],
+      itemOptions: [],
+    });
     await lifecycle.reopen('card-1', 'super-1', Role.SUPER_ADMIN);
     expect(tx.maintenanceCard.updateMany).toHaveBeenCalledWith({
       where: { id: 'card-1', status: MaintenanceCardStatus.CLOSED },
